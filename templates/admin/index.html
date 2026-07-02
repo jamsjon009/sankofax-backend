@@ -1,0 +1,95 @@
+﻿{% extends "unfold/layouts/base_simple.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block title %}Dashboard | {% trans "SankofaX Admin" %}{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Platform overview</p>
+</div>
+
+{# KPI Cards #}
+{% if kpi %}
+<div class="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-3 xl:grid-cols-6">
+  {% for card in kpi %}
+  <a href="{{ card.url }}" class="flex flex-col gap-1 rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-gray-800 p-5 shadow-sm hover:shadow-md transition-shadow no-underline">
+    <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ card.value }}</span>
+    <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ card.title }}</span>
+    <span class="text-xs text-gray-400">{{ card.subtitle }}</span>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+
+  {# Pending Listings #}
+  <div class="xl:col-span-1 rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
+      <h2 class="font-semibold text-gray-900 dark:text-white text-sm">Pending Review</h2>
+      <a href="/admin/directory/listing/?listing_status=pending_review" class="text-xs text-blue-600 hover:underline">View all</a>
+    </div>
+    {% if recent_pending %}
+    <div class="divide-y divide-gray-50 dark:divide-white/5">
+      {% for item in recent_pending %}
+      <a href="/admin/directory/listing/{{ item.id }}/change/" class="flex flex-col px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/5 no-underline">
+        <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ item.title }}</span>
+        <span class="text-xs text-gray-400">{{ item.company__company_name }} Â· {{ item.category__name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="px-5 py-6 text-sm text-gray-400 text-center">No listings pending review.</p>
+    {% endif %}
+  </div>
+
+  {# New Leads #}
+  <div class="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
+      <h2 class="font-semibold text-gray-900 dark:text-white text-sm">New Leads</h2>
+      <a href="/admin/crm/lead/?status=new" class="text-xs text-blue-600 hover:underline">View all</a>
+    </div>
+    {% if new_leads %}
+    <div class="divide-y divide-gray-50 dark:divide-white/5">
+      {% for lead in new_leads %}
+      <a href="/admin/crm/lead/{{ lead.id }}/change/" class="flex flex-col px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/5 no-underline">
+        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ lead.name }}</span>
+        <span class="text-xs text-gray-400">{{ lead.email }} Â· {{ lead.source }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="px-5 py-6 text-sm text-gray-400 text-center">No new leads.</p>
+    {% endif %}
+  </div>
+
+  {# Open Tickets #}
+  <div class="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
+      <h2 class="font-semibold text-gray-900 dark:text-white text-sm">Open Tickets</h2>
+      <a href="/admin/crm/supportticket/?status=open" class="text-xs text-blue-600 hover:underline">View all</a>
+    </div>
+    {% if open_tickets %}
+    <div class="divide-y divide-gray-50 dark:divide-white/5">
+      {% for ticket in open_tickets %}
+      <a href="/admin/crm/supportticket/{{ ticket.id }}/change/" class="flex items-start gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/5 no-underline">
+        <span class="text-sm font-medium text-gray-900 dark:text-white flex-1 truncate">{{ ticket.subject }}</span>
+        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full
+          {% if ticket.priority == 'urgent' %}bg-red-100 text-red-700
+          {% elif ticket.priority == 'high' %}bg-orange-100 text-orange-700
+          {% else %}bg-gray-100 text-gray-600{% endif %}">
+          {{ ticket.priority }}
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="px-5 py-6 text-sm text-gray-400 text-center">No open tickets.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
