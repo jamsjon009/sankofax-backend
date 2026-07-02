@@ -1,4 +1,4 @@
-"""
+﻿"""
 Management command to seed the database with realistic demo data.
 Run: python manage.py seed_data
 """
@@ -13,7 +13,7 @@ CATEGORIES = [
     {'name': 'Black Vegan Restaurants', 'icon': 'utensils', 'listing_type': 'business'},
     {'name': 'African Wellness Retreats', 'icon': 'heart-pulse', 'listing_type': 'business'},
     {'name': 'Black-Owned Healthcare', 'icon': 'stethoscope', 'listing_type': 'business'},
-    {'name': 'African Diaspora Events', 'icon': 'calendar', 'listing_type': 'event'},
+    {'name': 'African sankofax Events', 'icon': 'calendar', 'listing_type': 'event'},
     {'name': 'Afrocentric Travel', 'icon': 'plane', 'listing_type': 'business'},
     {'name': 'African Creatives', 'icon': 'palette', 'listing_type': 'business'},
     {'name': 'Black Therapists', 'icon': 'brain', 'listing_type': 'business'},
@@ -56,24 +56,24 @@ BUSINESS_NAMES_BY_CAT = {
         'Nguzo Saba Spa', 'The Kente Sanctuary', 'Maasai Mindfulness Lodge',
     ],
     'Black-Owned Healthcare': [
-        'Diaspora Health Clinic', 'Ubuntu Medical Group', 'Roots Health Partners',
+        'sankofax Health Clinic', 'Ubuntu Medical Group', 'Roots Health Partners',
         'Sankofa Wellness Clinic', 'Africana Care Center', 'Baobab Family Health',
     ],
-    'African Diaspora Events': [
-        'Afrotech Summit', 'Pan-African Arts Festival', 'Diaspora Business Week',
+    'African sankofax Events': [
+        'Afrotech Summit', 'Pan-African Arts Festival', 'sankofax Business Week',
         'African Film Showcase', 'Black Excellence Gala', 'Ubuntu Cultural Fair',
     ],
     'Afrocentric Travel': [
         'Roots Heritage Tours', 'Ubuntu Travel Co.', 'Sankofa Expeditions',
-        'Diaspora Journeys', 'Africa Homecoming Tours', 'Kente Routes',
+        'sankofax Journeys', 'Africa Homecoming Tours', 'Kente Routes',
     ],
     'African Creatives': [
         'Adinkra Design Studio', 'Kente Art Collective', 'Ubuntu Creative Hub',
-        'Roots Photography', 'Diaspora Fashion House', 'Baobab Arts Agency',
+        'Roots Photography', 'sankofax Fashion House', 'Baobab Arts Agency',
     ],
     'Black Therapists': [
         'Ubuntu Counseling Group', 'Roots Therapy Network', 'Sankofa Mind & Soul',
-        'Diaspora Wellness Therapy', 'Africana Psychology Practice', 'Healing Roots Therapy',
+        'sankofax Wellness Therapy', 'Africana Psychology Practice', 'Healing Roots Therapy',
     ],
     'Ethical African Products': [
         'Kente & Co.', 'Ubuntu Crafts', 'Roots Market', 'Baobab Goods',
@@ -81,7 +81,7 @@ BUSINESS_NAMES_BY_CAT = {
     ],
     'African-Owned Tech': [
         'Sankofa Tech Solutions', 'Ubuntu Digital', 'Roots Software Studio',
-        'Baobab Analytics', 'Kente AI Labs', 'Diaspora Dev Agency', 'Adinkra Systems',
+        'Baobab Analytics', 'Kente AI Labs', 'sankofax Dev Agency', 'Adinkra Systems',
     ],
     'African Spiritual & Healing': [
         'Sankofa Spirit Center', 'Ubuntu Healing Arts', 'Roots & Ancestors Sanctuary',
@@ -93,10 +93,10 @@ SHORT_DESCRIPTIONS = [
     'A welcoming space celebrating African culture and Black excellence.',
     'Authentically rooted in tradition, boldly reaching toward the future.',
     'Where community, wellness, and heritage come together.',
-    'Proudly Black-owned, community-driven, and diaspora-focused.',
+    'Proudly Black-owned, community-driven, and sankofax-focused.',
     'Serving the global African community with passion and purpose.',
-    'Connecting the diaspora through culture, health, and creativity.',
-    'Built by and for the African diaspora worldwide.',
+    'Connecting the sankofax through culture, health, and creativity.',
+    'Built by and for the African sankofax worldwide.',
     'Celebrating Black excellence — from root to branch.',
 ]
 
