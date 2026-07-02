@@ -16,7 +16,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('role', User.Role.ADMIN)
+        extra_fields.setdefault('role', User.Role.SUPER_ADMIN)
         return self.create_user(email, password, **extra_fields)
 
 
@@ -24,8 +24,10 @@ class User(AbstractUser):
     class Role(models.TextChoices):
         VISITOR = 'visitor', 'Visitor'
         BUSINESS_OWNER = 'business_owner', 'Business Owner'
+        MODERATOR = 'moderator', 'Moderator'
         STAFF = 'staff', 'Staff'
         ADMIN = 'admin', 'Admin'
+        SUPER_ADMIN = 'super_admin', 'Super Admin'
 
     class Region(models.TextChoices):
         GLOBAL_NORTH = 'global_north', 'Global North'
@@ -54,8 +56,40 @@ class User(AbstractUser):
 
     @property
     def is_business_owner(self):
-        return self.role in [self.Role.BUSINESS_OWNER, self.Role.ADMIN]
+        return self.role in [self.Role.BUSINESS_OWNER, self.Role.ADMIN, self.Role.SUPER_ADMIN]
 
     @property
     def is_admin_or_staff(self):
-        return self.role in [self.Role.STAFF, self.Role.ADMIN] or self.is_staff
+        return self.role in [
+            self.Role.STAFF, self.Role.MODERATOR, self.Role.ADMIN, self.Role.SUPER_ADMIN
+        ] or self.is_staff
+
+    @property
+    def is_super_admin(self):
+        return self.role == self.Role.SUPER_ADMIN or self.is_superuser
+
+
+# Proxy models for admin panel segmentation
+
+class AdminUserProxy(User):
+    """Staff/Admin users managed in the Admins section."""
+    class Meta:
+        proxy = True
+        verbose_name = 'Admin'
+        verbose_name_plural = 'Admins'
+
+
+class CompanyUserProxy(User):
+    """Business owners — registered with company information."""
+    class Meta:
+        proxy = True
+        verbose_name = 'Company Account'
+        verbose_name_plural = 'Company Accounts'
+
+
+class RegularUserProxy(User):
+    """General users — registered to use the service."""
+    class Meta:
+        proxy = True
+        verbose_name = 'General User'
+        verbose_name_plural = 'General Users'

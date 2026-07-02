@@ -107,7 +107,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = env('MEDIA_ROOT', default=str(BASE_DIR / 'media'))
@@ -213,26 +214,43 @@ UNFOLD = {
                         "icon": "checklist",
                         "link": "/admin/directory/amenity/",
                     },
+                    {
+                        "title": "Reviews",
+                        "icon": "star",
+                        "link": "/admin/reviews/review/",
+                    },
                 ],
             },
             {
-                "title": "Users & Companies",
+                "title": "Admins",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Admin Users",
+                        "icon": "admin_panel_settings",
+                        "link": "/admin/accounts/adminuserproxy/",
+                    },
+                ],
+            },
+            {
+                "title": "Companies",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Companies",
+                        "icon": "domain",
+                        "link": "/admin/profiles/companyprofile/",
+                    },
+                ],
+            },
+            {
+                "title": "Users",
                 "separator": True,
                 "items": [
                     {
                         "title": "Users",
                         "icon": "group",
-                        "link": "/admin/accounts/user/",
-                    },
-                    {
-                        "title": "Company Profiles",
-                        "icon": "business",
-                        "link": "/admin/profiles/companyprofile/",
-                    },
-                    {
-                        "title": "Reviews",
-                        "icon": "star",
-                        "link": "/admin/reviews/review/",
+                        "link": "/admin/accounts/regularuserproxy/",
                     },
                 ],
             },
