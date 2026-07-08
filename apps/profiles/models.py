@@ -1,3 +1,4 @@
+﻿from django_ckeditor_5.fields import CKEditor5Field
 import uuid
 from django.db import models
 from django.conf import settings
@@ -45,7 +46,7 @@ class CompanyProfile(models.Model):
     cover_image = models.ImageField(upload_to='covers/', null=True, blank=True)
     founded_year = models.PositiveIntegerField(null=True, blank=True)
     company_size = models.CharField(max_length=10, choices=Size.choices, default=Size.SOLO)
-    description = models.TextField(blank=True)
+    description = CKEditor5Field(config_name='minimal', blank=True)
     website = models.URLField(blank=True)
     contact_email = models.EmailField(blank=True)
     contact_phone = models.CharField(max_length=20, blank=True)

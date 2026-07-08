@@ -1,18 +1,25 @@
-from rest_framework import serializers
+﻿from rest_framework import serializers
 from .models import Category, Amenity, Listing, ListingImage
 
 
 class CategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
+    cover_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'icon', 'description', 'listing_type', 'subcategories']
+        fields = ['id', 'name', 'slug', 'icon', 'description', 'listing_type', 'cover_image', 'subcategories']
 
     def get_subcategories(self, obj):
         if obj.subcategories.exists():
-            return CategorySerializer(obj.subcategories.all(), many=True).data
+            return CategorySerializer(obj.subcategories.all(), many=True, context=self.context).data
         return []
+
+    def get_cover_image(self, obj):
+        if not obj.cover_image:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.cover_image.url) if request else obj.cover_image.url
 
 
 class AmenitySerializer(serializers.ModelSerializer):
@@ -22,9 +29,15 @@ class AmenitySerializer(serializers.ModelSerializer):
 
 
 class ListingImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = ListingImage
         fields = ['id', 'image', 'caption', 'order']
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.image.url) if request else obj.image.url
 
 
 class ListingCardSerializer(serializers.ModelSerializer):
@@ -34,6 +47,7 @@ class ListingCardSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.company_name', read_only=True)
     company_verified = serializers.BooleanField(source='company.is_verified', read_only=True)
     cover_image = serializers.SerializerMethodField()
+    gallery_images = serializers.SerializerMethodField()
 
     class Meta:
         model = Listing
@@ -41,7 +55,7 @@ class ListingCardSerializer(serializers.ModelSerializer):
             'id', 'slug', 'title', 'short_description', 'city', 'country',
             'avg_rating', 'review_count', 'price_range', 'featured',
             'category_name', 'category_slug', 'company_name', 'company_verified',
-            'cover_image',
+            'cover_image', 'gallery_images',
         ]
 
     def get_cover_image(self, obj):
@@ -51,6 +65,13 @@ class ListingCardSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(first.image.url) if request else first.image.url
         return None
 
+    def get_gallery_images(self, obj):
+        request = self.context.get('request')
+        return [
+            request.build_absolute_uri(img.image.url) if request else img.image.url
+            for img in obj.gallery_images.all()
+        ]
+
 
 class ListingDetailSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
@@ -59,7 +80,13 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.company_name', read_only=True)
     company_slug = serializers.CharField(source='company.slug', read_only=True)
     company_verified = serializers.BooleanField(source='company.is_verified', read_only=True)
-    company_logo = serializers.ImageField(source='company.logo', read_only=True)
+    company_logo = serializers.SerializerMethodField()
+
+    def get_company_logo(self, obj):
+        if obj.company and obj.company.logo:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.company.logo.url) if request else obj.company.logo.url
+        return None
 
     class Meta:
         model = Listing
@@ -71,6 +98,7 @@ class ListingDetailSerializer(serializers.ModelSerializer):
             'opening_hours', 'avg_rating', 'review_count', 'view_count',
             'category', 'amenities', 'gallery_images',
             'company_name', 'company_slug', 'company_verified', 'company_logo',
+            'meta_title', 'meta_description', 'og_image',
             'created_at', 'published_at',
         ]
 

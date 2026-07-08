@@ -8,6 +8,7 @@ class SubscriberAdmin(ModelAdmin):
     list_display = ['email', 'source', 'is_active', 'subscribed_at']
     list_filter = ['source', 'is_active']
     search_fields = ['email']
+    list_per_page = 10
     actions = ['export_csv']
 
     @admin.action(description='Export selected as CSV')

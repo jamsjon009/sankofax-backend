@@ -1,11 +1,11 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.utils.html import format_html
 from django.urls import reverse
 from unfold.admin import ModelAdmin
 from unfold.forms import AdminPasswordChangeForm
-from .models import User, AdminUserProxy, CompanyUserProxy, RegularUserProxy
+from .models import User, AdminUserProxy, CompanyUserProxy, RegularUserProxy, EmailVerificationToken, PasswordResetToken
 
 ADMIN_ROLES = [User.Role.STAFF, User.Role.MODERATOR, User.Role.ADMIN, User.Role.SUPER_ADMIN]
 
@@ -15,6 +15,7 @@ ADMIN_ROLES = [User.Role.STAFF, User.Role.MODERATOR, User.Role.ADMIN, User.Role.
 @admin.register(AdminUserProxy)
 class AdminUserAdmin(BaseUserAdmin, ModelAdmin):
     list_display = ['email', 'display_role', 'is_staff', 'is_superuser', 'is_active', 'date_joined', 'actions_column']
+    list_per_page = 10
     list_filter = ['role', 'is_staff', 'is_superuser', 'is_active']
     search_fields = ['email', 'phone_number']
     ordering = ['-date_joined']
@@ -80,13 +81,14 @@ class AdminUserAdmin(BaseUserAdmin, ModelAdmin):
 @admin.register(CompanyUserProxy)
 class CompanyUserAdmin(BaseUserAdmin, ModelAdmin):
     list_display = ['email', 'region', 'is_verified', 'is_active', 'date_joined']
+    list_per_page = 10
     list_filter = ['region', 'is_verified', 'is_active']
     search_fields = ['email', 'phone_number']
     ordering = ['-date_joined']
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal', {'fields': ('phone_number', 'avatar')}),
-        ('Status', {'fields': ('region', 'is_verified', 'is_active')}),
+        ('Status', {'fields': ('region', 'country', 'is_verified', 'is_active')}),
         ('Dates', {'fields': ('date_joined', 'last_login')}),
     )
     add_fieldsets = (
@@ -110,13 +112,14 @@ class CompanyUserAdmin(BaseUserAdmin, ModelAdmin):
 @admin.register(RegularUserProxy)
 class RegularUserAdmin(BaseUserAdmin, ModelAdmin):
     list_display = ['email', 'region', 'is_verified', 'is_active', 'date_joined']
+    list_per_page = 10
     list_filter = ['region', 'is_verified', 'is_active']
     search_fields = ['email', 'phone_number']
     ordering = ['-date_joined']
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal', {'fields': ('phone_number', 'avatar')}),
-        ('Status', {'fields': ('region', 'is_verified', 'is_active')}),
+        ('Status', {'fields': ('region', 'country', 'is_verified', 'is_active')}),
         ('Dates', {'fields': ('date_joined', 'last_login')}),
     )
     add_fieldsets = (
@@ -133,3 +136,16 @@ class RegularUserAdmin(BaseUserAdmin, ModelAdmin):
 
 # ── Hide base User model from admin (use proxy models above) ──────────────────
 # User is not registered directly — all management goes through proxy models.
+
+
+# -- Email Verification Tokens ------------------------------------------------
+@admin.register(EmailVerificationToken)
+class EmailVerificationTokenAdmin(ModelAdmin):
+    list_display = ['user', 'created_at', 'is_expired_display']
+    list_per_page = 10
+    search_fields = ['user__email']
+    readonly_fields = ['user', 'token', 'created_at']
+
+    @admin.display(description='Expired?', boolean=True)
+    def is_expired_display(self, obj):
+        return obj.is_expired()

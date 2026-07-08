@@ -1,4 +1,4 @@
-from django.utils import timezone
+﻿from django.utils import timezone
 from rest_framework import viewsets, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,6 +13,7 @@ from .filters import ListingFilter
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.filter(parent=None).prefetch_related('subcategories')
+    pagination_class = None  # plain array
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'slug'
@@ -22,6 +23,7 @@ class AmenityViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Amenity.objects.all()
     serializer_class = AmenitySerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None  # plain array
     lookup_field = 'slug'
 
 

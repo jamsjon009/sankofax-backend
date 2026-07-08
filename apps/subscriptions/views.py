@@ -14,6 +14,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 class PlanListView(generics.ListAPIView):
     serializer_class = PlanSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None  # plain array, plans are few
 
     def get_queryset(self):
         qs = Plan.objects.filter(is_active=True)

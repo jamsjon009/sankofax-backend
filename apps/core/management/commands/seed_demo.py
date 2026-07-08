@@ -1,6 +1,8 @@
 ﻿from django.core.management.base import BaseCommand
+from django.core.files.base import ContentFile
 from django.utils import timezone
 from datetime import timedelta
+import urllib.request
 
 
 class Command(BaseCommand):
@@ -17,7 +19,21 @@ class Command(BaseCommand):
         self._crm()
         self._newsletter()
         self._events()
+        self._blog()
+        self._core_content()
         self.stdout.write('\n>>> Done! Demo data seeded.\n')
+
+    def _fetch_image(self, seed, width=800, height=600):
+        """Download a deterministic image from picsum.photos. Returns (filename, ContentFile) or (None, None)."""
+        url = f'https://picsum.photos/seed/{seed}/{width}/{height}'
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'SankofaX-seed/1.0'})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = resp.read()
+            return f'{seed}.jpg', ContentFile(data)
+        except Exception as exc:
+            self.stdout.write(self.style.WARNING(f'  [warn] image download failed ({seed}): {exc}'))
+            return None, None
 
     def _users(self):
         from apps.accounts.models import User
@@ -65,6 +81,13 @@ class Command(BaseCommand):
             ('Technology & IT', 'laptop', 'business'),
             ('Music & Entertainment', 'music', 'event'),
         ]
+        cat_seeds = {
+            'Restaurant & Food': 'cat-restaurant-food',
+            'Beauty & Wellness': 'cat-beauty-wellness',
+            'Fashion & Clothing': 'cat-fashion-clothing',
+            'Technology & IT': 'cat-technology-it',
+            'Music & Entertainment': 'cat-music-entertainment',
+        }
         self._categories = {}
         for name, icon, ltype in cats:
             cat, created = Category.objects.get_or_create(
@@ -73,6 +96,11 @@ class Command(BaseCommand):
             self._categories[name] = cat
             if created:
                 self.stdout.write('  + Category  ' + name)
+            if not cat.cover_image and name in cat_seeds:
+                fname, fcontent = self._fetch_image(cat_seeds[name], 1200, 400)
+                if fname:
+                    cat.cover_image.save(fname, fcontent, save=True)
+                    self.stdout.write('  ~ image added for  ' + name)
         amenities = ['Wi-Fi', 'Parking', 'Wheelchair Accessible', 'Outdoor Seating',
                      'Delivery Available', 'Accepts Cards', 'Pet Friendly']
         self._amenities = []
@@ -87,14 +115,17 @@ class Command(BaseCommand):
         from apps.profiles.models import CompanyProfile
         companies_data = [
             dict(owner_email='owner1@sankofax.com', company_name='Sankofa Kitchen',
+                 logo_seed='logo-sankofa-kitchen', cover_seed='cover-sankofa-kitchen',
                  description='Authentic West African cuisine in the heart of London.',
                  website='https://sankofakitchen.co.uk', contact_email='hello@sankofakitchen.co.uk',
                  contact_phone='+44 20 7946 0958', company_size='1-10', founded_year=2018, is_verified=True),
             dict(owner_email='owner2@sankofax.com', company_name='AfroTech Solutions',
+                 logo_seed='logo-afrotech', cover_seed='cover-afrotech',
                  description='Pan-African software development house building fintech and edtech products.',
                  website='https://afrotech.io', contact_email='info@afrotech.io',
                  contact_phone='+1 646 555 0201', company_size='11-50', founded_year=2020, is_verified=True),
             dict(owner_email='owner3@sankofax.com', company_name='Kente and Co.',
+                 logo_seed='logo-kente-co', cover_seed='cover-kente-co',
                  description='Luxury African fashion, bespoke Ankara and Kente garments shipped worldwide.',
                  website='https://kenteandco.com', contact_email='orders@kenteandco.com',
                  contact_phone='+1 929 555 0187', company_size='solo', founded_year=2021, is_verified=False),
@@ -102,24 +133,50 @@ class Command(BaseCommand):
         self._companies = {}
         for d in companies_data:
             owner_email = d.pop('owner_email')
+            logo_seed = d.pop('logo_seed')
+            cover_seed = d.pop('cover_seed')
             try:
                 owner = User.objects.get(email=owner_email)
             except User.DoesNotExist:
                 continue
             if not CompanyProfile.objects.filter(owner=owner).exists():
                 cp = CompanyProfile.objects.create(owner=owner, **d)
+                fname, fcontent = self._fetch_image(logo_seed, 400, 400)
+                if fname:
+                    cp.logo.save(fname, fcontent, save=False)
+                fname2, fcontent2 = self._fetch_image(cover_seed, 1200, 400)
+                if fname2:
+                    cp.cover_image.save(fname2, fcontent2, save=False)
+                cp.save()
                 self._companies[owner_email] = cp
                 self.stdout.write('  + Company  ' + cp.company_name)
             else:
                 cp = CompanyProfile.objects.filter(owner=owner).first()
+                # Backfill images if missing
+                changed = False
+                if not cp.logo:
+                    fname, fcontent = self._fetch_image(logo_seed, 400, 400)
+                    if fname:
+                        cp.logo.save(fname, fcontent, save=False)
+                        changed = True
+                if not cp.cover_image:
+                    fname2, fcontent2 = self._fetch_image(cover_seed, 1200, 400)
+                    if fname2:
+                        cp.cover_image.save(fname2, fcontent2, save=False)
+                        changed = True
+                if changed:
+                    cp.save()
+                    self.stdout.write('  ~ updated images for  ' + cp.company_name)
+                else:
+                    self.stdout.write('  ~ skip  ' + cp.company_name + ' (exists)')
                 self._companies[owner_email] = cp
-                self.stdout.write('  ~ skip  ' + cp.company_name + ' (exists)')
 
     def _listings(self):
-        from apps.directory.models import Listing
+        from apps.directory.models import Listing, ListingImage
         now = timezone.now()
         listings_data = [
             dict(company_key='owner1@sankofax.com', category_name='Restaurant & Food',
+                 image_seeds=['listing-kitchen-brixton-1', 'listing-kitchen-brixton-2', 'listing-kitchen-brixton-3'],
                  title='Sankofa Kitchen Brixton',
                  short_description='Authentic West African restaurant serving jollof, suya and fufu.',
                  full_description='Step into Sankofa Kitchen for a true taste of West Africa. Our chefs prepare traditional dishes using imported spices and locally sourced ingredients. Famous for our smoky suya skewers, peanut soup, and award-winning jollof rice.',
@@ -128,6 +185,7 @@ class Command(BaseCommand):
                  email='hello@sankofakitchen.co.uk', price_range='$$', featured=True,
                  published_at=now - timedelta(days=10), avg_rating='4.80', review_count=24),
             dict(company_key='owner1@sankofax.com', category_name='Restaurant & Food',
+                 image_seeds=['listing-kitchen-peckham-1', 'listing-kitchen-peckham-2'],
                  title='Sankofa Kitchen Peckham',
                  short_description='Our second location, same great food, new neighbourhood.',
                  full_description='The Peckham branch of Sankofa Kitchen brings the same delicious West African flavours to South East London. Dine in or take away. Catering available for events.',
@@ -136,6 +194,7 @@ class Command(BaseCommand):
                  email='peckham@sankofakitchen.co.uk', price_range='$$', featured=False,
                  published_at=None, avg_rating='0', review_count=0),
             dict(company_key='owner2@sankofax.com', category_name='Technology & IT',
+                 image_seeds=['listing-afrotech-dev-1', 'listing-afrotech-dev-2', 'listing-afrotech-dev-3'],
                  title='AfroTech Software Development',
                  short_description='Custom software, mobile apps and fintech built by African engineers.',
                  full_description='AfroTech Solutions is a Pan-African software house with teams in Lagos, Nairobi and New York. We build scalable fintech platforms, edtech tools and enterprise software.',
@@ -144,6 +203,7 @@ class Command(BaseCommand):
                  email='info@afrotech.io', price_range='$$$', featured=True,
                  published_at=now - timedelta(days=5), avg_rating='4.90', review_count=11),
             dict(company_key='owner3@sankofax.com', category_name='Fashion & Clothing',
+                 image_seeds=['listing-kente-fashion-1', 'listing-kente-fashion-2', 'listing-kente-fashion-3'],
                  title='Kente and Co Luxury African Fashion',
                  short_description='Bespoke Ankara, Kente and Adire garments crafted for the diaspora.',
                  full_description='Kente and Co celebrates African textile heritage with contemporary silhouettes. Each piece is hand-crafted using authentic Ghanaian Kente cloth and Nigerian Ankara fabric.',
@@ -152,6 +212,7 @@ class Command(BaseCommand):
                  email='orders@kenteandco.com', price_range='$$$', featured=False,
                  published_at=now - timedelta(days=3), avg_rating='4.60', review_count=8),
             dict(company_key='owner2@sankofax.com', category_name='Technology & IT',
+                 image_seeds=['listing-afrotech-mobile-1', 'listing-afrotech-mobile-2'],
                  title='AfroTech Mobile App Development',
                  short_description='Cross-platform mobile apps for African markets.',
                  full_description='Specialising in React Native and Flutter apps tailored for low-bandwidth African markets. Offline-first architecture, M-Pesa and Flutterwave payment integration.',
@@ -160,24 +221,43 @@ class Command(BaseCommand):
                  email='mobile@afrotech.io', price_range='$$', featured=False,
                  published_at=None, avg_rating='0', review_count=0),
         ]
+        from django.utils.text import slugify
         self._listings = {}
         for d in listings_data:
             company_key = d.pop('company_key')
             category_name = d.pop('category_name')
+            image_seeds = d.pop('image_seeds', [])
             title = d['title']
+            slug = slugify(title)
             company = self._companies.get(company_key)
             category = self._categories.get(category_name)
             if not company or not category:
                 continue
-            if not Listing.objects.filter(title=title).exists():
+            if not Listing.objects.filter(slug=slug).exists():
                 lst = Listing.objects.create(company=company, category=category, **d)
                 if self._amenities:
                     lst.amenities.set(self._amenities[:3])
+                # Gallery images
+                for seed in image_seeds:
+                    fname, fcontent = self._fetch_image(seed, 800, 600)
+                    if fname:
+                        img = ListingImage(listing=lst)
+                        img.image.save(fname, fcontent, save=True)
                 self._listings[title] = lst
-                self.stdout.write('  + Listing  ' + title)
+                self.stdout.write('  + Listing  ' + title + f' ({len(image_seeds)} images)')
             else:
-                self._listings[title] = Listing.objects.get(title=title)
-                self.stdout.write('  ~ skip  ' + title + ' (exists)')
+                lst = Listing.objects.get(slug=slug)
+                self._listings[title] = lst
+                # Backfill gallery images if none exist
+                if image_seeds and not lst.gallery_images.exists():
+                    for seed in image_seeds:
+                        fname, fcontent = self._fetch_image(seed, 800, 600)
+                        if fname:
+                            img = ListingImage(listing=lst)
+                            img.image.save(fname, fcontent, save=True)
+                    self.stdout.write('  ~ updated gallery for  ' + title)
+                else:
+                    self.stdout.write('  ~ skip  ' + title + ' (exists)')
 
     def _subscriptions(self):
         from apps.accounts.models import User
@@ -347,3 +427,185 @@ class Command(BaseCommand):
             if not Event.objects.filter(title=d['title']).exists():
                 Event.objects.create(**d)
                 self.stdout.write('  + Event  ' + d['title'])
+
+    def _blog(self):
+        from apps.accounts.models import User
+        from apps.blog.models import BlogCategory, BlogPost
+        now = timezone.now()
+
+        categories = [
+            ('Business Tips', 'Practical advice for growing your business on SankofaX.'),
+            ('Diaspora Stories', 'Inspiring journeys from Black and African entrepreneurs.'),
+            ('Culture & Heritage', 'Celebrating African culture, food, fashion and music.'),
+            ('Platform Updates', 'News and feature announcements from the SankofaX team.'),
+        ]
+        self._blog_categories = {}
+        for name, desc in categories:
+            cat, created = BlogCategory.objects.get_or_create(
+                name=name, defaults={'description': desc}
+            )
+            self._blog_categories[name] = cat
+            if created:
+                self.stdout.write('  + BlogCategory  ' + name)
+
+        try:
+            author = User.objects.get(email='admin@sankofax.com')
+        except User.DoesNotExist:
+            author = User.objects.filter(is_staff=True).first()
+
+        posts = [
+            dict(title='5 Ways to Make Your Business Listing Stand Out',
+                 category='Business Tips', cover_seed='blog-listing-tips',
+                 tags='listings, marketing, seo, growth', is_featured=True,
+                 read_time_minutes=6, view_count=428, days_ago=12,
+                 excerpt='Your listing is your storefront on SankofaX. Here is how to make it shine and attract more customers.',
+                 content='<h2>Make a strong first impression</h2><p>Your SankofaX listing is often the first thing a potential customer sees. A complete, well-crafted listing builds trust instantly.</p>'
+                         '<ol><li><strong>Use high-quality photos.</strong> Listings with a full gallery get up to 3x more views.</li>'
+                         '<li><strong>Write a clear description.</strong> Explain what makes your business unique.</li>'
+                         '<li><strong>Add all your contact details.</strong> Make it effortless for customers to reach you.</li>'
+                         '<li><strong>Collect reviews.</strong> Social proof drives conversions.</li>'
+                         '<li><strong>Keep it updated.</strong> Fresh listings rank higher.</li></ol>'
+                         '<p>Follow these steps and watch your engagement grow.</p>'),
+            dict(title='From Accra to London: The Sankofa Kitchen Story',
+                 category='Diaspora Stories', cover_seed='blog-sankofa-story',
+                 tags='food, entrepreneurship, london, west-africa', is_featured=True,
+                 read_time_minutes=8, view_count=612, days_ago=20,
+                 excerpt='How one family turned a love of West African cooking into a thriving London restaurant chain.',
+                 content='<p>When Zuri Mensah moved from Accra to London, she missed the flavours of home. What started as weekend cooking for friends became <strong>Sankofa Kitchen</strong> — now one of Brixton\'s most loved restaurants.</p>'
+                         '<h2>Rooted in tradition</h2><p>"Every dish tells a story," says Zuri. "Our jollof recipe has been in my family for three generations."</p>'
+                         '<p>Today the business is expanding to Peckham, bringing authentic West African cuisine to even more people across the diaspora.</p>'),
+            dict(title='Why African Fashion Is Taking Over the Global Stage',
+                 category='Culture & Heritage', cover_seed='blog-african-fashion',
+                 tags='fashion, kente, ankara, culture', is_featured=False,
+                 read_time_minutes=5, view_count=289, days_ago=6,
+                 excerpt='From runways in Paris to weddings in Atlanta, African prints and craftsmanship are having a global moment.',
+                 content='<p>African fashion is no longer a niche — it is a global movement. Brands like <strong>Kente and Co.</strong> are leading the way with bespoke Ankara and Kente garments shipped worldwide.</p>'
+                         '<h2>Heritage meets modern design</h2><p>Contemporary silhouettes crafted from authentic Ghanaian and Nigerian fabrics are winning over a new generation.</p>'),
+            dict(title='Introducing Featured Listings and CRM Tools',
+                 category='Platform Updates', cover_seed='blog-platform-update',
+                 tags='product, features, crm, announcement', is_featured=False,
+                 read_time_minutes=3, view_count=154, days_ago=2,
+                 excerpt='We are rolling out powerful new tools to help business owners get discovered and manage their customers.',
+                 content='<p>We are excited to announce two major features on SankofaX:</p>'
+                         '<ul><li><strong>Featured Listings</strong> — get premium placement in search and category pages.</li>'
+                         '<li><strong>Built-in CRM</strong> — manage leads and support tickets right from your dashboard.</li></ul>'
+                         '<p>Both are available now on our Growth, Pro and Enterprise plans.</p>'),
+            dict(title='Building Fintech for the African Market',
+                 category='Diaspora Stories', cover_seed='blog-fintech',
+                 tags='technology, fintech, africa, startups', is_featured=False,
+                 read_time_minutes=7, view_count=203, days_ago=9,
+                 excerpt='AfroTech Solutions is building the payment rails that power the next generation of African businesses.',
+                 content='<p>With teams in Lagos, Nairobi and New York, <strong>AfroTech Solutions</strong> is tackling one of the continent\'s biggest challenges: seamless digital payments.</p>'
+                         '<h2>Offline-first, always</h2><p>"We design for low-bandwidth realities," explains founder Kofi Osei. Their apps integrate M-Pesa and Flutterwave and work even with spotty connectivity.</p>'),
+            dict(title='A Beginner\'s Guide to SEO for Small Businesses',
+                 category='Business Tips', cover_seed='blog-seo-guide',
+                 tags='seo, marketing, growth, tips', is_featured=False,
+                 read_time_minutes=6, view_count=97, days_ago=1, status='draft',
+                 excerpt='Search engine optimisation sounds intimidating, but a few simple habits can dramatically boost your visibility.',
+                 content='<p>SEO does not have to be complicated. Start with these fundamentals to help customers find you online.</p>'
+                         '<h2>The basics</h2><p>Use clear titles, write descriptive content, and keep your business information consistent everywhere.</p>'),
+        ]
+        for p in posts:
+            title = p['title']
+            if BlogPost.objects.filter(title=title).exists():
+                self.stdout.write('  ~ skip  blog: ' + title[:40] + ' (exists)')
+                continue
+            cat = self._blog_categories.get(p['category'])
+            cover_seed = p.pop('cover_seed', None)
+            days_ago = p.pop('days_ago', 0)
+            status = p.pop('status', 'published')
+            p.pop('category')
+            published_at = None if status != 'published' else now - timedelta(days=days_ago)
+            post = BlogPost(
+                author=author, category=cat, status=status,
+                published_at=published_at, **p,
+            )
+            if cover_seed:
+                fname, fcontent = self._fetch_image(cover_seed, 1200, 600)
+                if fname:
+                    post.cover_image.save(fname, fcontent, save=False)
+            post.save()
+            self.stdout.write('  + BlogPost  ' + title[:45])
+
+    def _core_content(self):
+        from apps.accounts.models import User
+        from apps.core.models import SiteSetting, Page, FAQ, Testimonial
+
+        # Site settings (singleton)
+        s = SiteSetting.get()
+        if not s.contact_email:
+            s.site_name = 'SankofaX'
+            s.contact_email = 'hello@sankofax.com'
+            s.contact_phone = '+44 20 7946 0000'
+            s.contact_address = '128 City Road, London, EC1V 2NX, United Kingdom'
+            s.footer_text = 'SankofaX — the global directory connecting Black & African businesses with the diaspora.'
+            s.meta_description = 'Discover and support Black and African-owned businesses worldwide on SankofaX.'
+            s.response_time = 'Within 24–48 hours'
+            s.instagram_url = 'https://www.instagram.com/sankofax'
+            s.facebook_url = 'https://www.facebook.com/sankofax'
+            s.twitter_url = 'https://x.com/sankofax'
+            s.linkedin_url = 'https://www.linkedin.com/company/sankofax'
+            s.save()
+            self.stdout.write('  + SiteSetting  configured')
+        else:
+            self.stdout.write('  ~ skip  SiteSetting (configured)')
+
+        # Static pages
+        pages = [
+            dict(title='About Us', slug='about',
+                 content='<h2>Our Mission</h2><p>SankofaX exists to connect Black and African-owned businesses with customers across the global diaspora. The word <em>Sankofa</em> means to reach back and reclaim what is valuable — and that is exactly what we help businesses do.</p>'
+                         '<p>Whether you run a restaurant in London, a tech company in Nairobi, or a fashion label in Atlanta, SankofaX helps you get discovered.</p>'),
+            dict(title='Contact', slug='contact',
+                 content='<h2>Get in touch</h2><p>Have a question or want to partner with us? Reach out at <a href="mailto:hello@sankofax.com">hello@sankofax.com</a> and our team will respond within 24–48 hours.</p>'),
+            dict(title='Terms of Service', slug='terms',
+                 content='<h2>Terms of Service</h2><p>By using SankofaX you agree to our terms and conditions. Please use the platform respectfully and in accordance with all applicable laws.</p><p>This is placeholder demo content.</p>'),
+            dict(title='Privacy Policy', slug='privacy',
+                 content='<h2>Privacy Policy</h2><p>We respect your privacy and are committed to protecting your personal data. We only collect what is necessary to provide our services.</p><p>This is placeholder demo content.</p>'),
+        ]
+        for d in pages:
+            if not Page.objects.filter(slug=d['slug']).exists():
+                Page.objects.create(is_active=True, **d)
+                self.stdout.write('  + Page  ' + d['title'])
+
+        # FAQs
+        faqs = [
+            ('How do I list my business on SankofaX?',
+             '<p>Create a free account, choose a plan, and click "Add Listing" from your dashboard. Fill in your business details, add photos, and publish!</p>', 1),
+            ('Is there a free plan?',
+             '<p>Yes! Our Starter plan is completely free and lets you publish one listing with basic analytics.</p>', 2),
+            ('How do featured listings work?',
+             '<p>Featured listings get premium placement at the top of search results and category pages. They are available on our Growth, Pro and Enterprise plans.</p>', 3),
+            ('Can customers leave reviews?',
+             '<p>Absolutely. Verified users can leave star ratings and written reviews on any published listing. Reviews are moderated before appearing publicly.</p>', 4),
+            ('How do I upgrade or cancel my subscription?',
+             '<p>You can manage your subscription anytime from the Billing section of your dashboard. Changes take effect at the end of your current billing cycle.</p>', 5),
+            ('Which countries does SankofaX cover?',
+             '<p>SankofaX is a global platform. We welcome Black and African-owned businesses from anywhere in the world.</p>', 6),
+        ]
+        for question, answer, order in faqs:
+            if not FAQ.objects.filter(question=question).exists():
+                FAQ.objects.create(question=question, answer=answer, order=order, is_active=True)
+                self.stdout.write('  + FAQ  ' + question[:40])
+
+        # Testimonials (tied to real users)
+        testimonials = [
+            ('owner1@sankofax.com', 'Restaurant Owner – London, UK',
+             'SankofaX brought a whole new wave of customers to Sankofa Kitchen. Within weeks of listing, our weekend bookings doubled!', 1),
+            ('owner2@sankofax.com', 'Tech Founder – New York, USA',
+             'The CRM tools alone are worth it. We manage all our leads in one place and the featured listing keeps us at the top of search.', 2),
+            ('owner3@sankofax.com', 'Fashion Designer – Atlanta, USA',
+             'As a small fashion label, visibility is everything. SankofaX connected Kente and Co. with customers across the diaspora.', 3),
+            ('user1@sankofax.com', 'Food Lover – London, UK',
+             'I discovered so many amazing Black-owned restaurants through SankofaX. It has become my go-to for finding authentic food.', 4),
+        ]
+        for email, role, body, order in testimonials:
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                continue
+            if not Testimonial.objects.filter(user=user, body=body).exists():
+                Testimonial.objects.create(
+                    user=user, role=role, body=body, order=order,
+                    status=Testimonial.Status.APPROVED,
+                )
+                self.stdout.write('  + Testimonial  ' + email)

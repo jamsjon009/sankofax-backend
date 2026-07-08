@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 from django.conf import settings
 
 
@@ -17,6 +17,8 @@ class Lead(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True)
+    subject = models.CharField(max_length=200, blank=True)
+    message = models.TextField(blank=True)
     source = models.CharField(max_length=20, choices=Source.choices, default=Source.CONTACT_FORM)
     related_listing = models.ForeignKey('directory.Listing', null=True, blank=True, on_delete=models.SET_NULL)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.NEW)

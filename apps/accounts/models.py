@@ -1,6 +1,7 @@
-import uuid
+﻿import uuid
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
@@ -16,7 +17,8 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('role', User.Role.SUPER_ADMIN)
+        extra_fields.setdefault('role', 'super_admin')
+        extra_fields.setdefault('is_verified', True)
         return self.create_user(email, password, **extra_fields)
 
 
@@ -40,6 +42,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.VISITOR)
     is_verified = models.BooleanField(default=False)
     region = models.CharField(max_length=20, choices=Region.choices, default=Region.GLOBAL_NORTH)
+    country = models.CharField(max_length=2, blank=True, help_text='ISO 3166-1 alpha-2 country code')
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
     USERNAME_FIELD = 'email'
@@ -69,10 +72,34 @@ class User(AbstractUser):
         return self.role == self.Role.SUPER_ADMIN or self.is_superuser
 
 
+class EmailVerificationToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='verification_token')
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return (timezone.now() - self.created_at).total_seconds() > 86400  # 24 hours
+
+    def __str__(self):
+        return f'Verification token for {self.user.email}'
+
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used = models.BooleanField(default=False)
+
+    def is_expired(self):
+        return (timezone.now() - self.created_at).total_seconds() > 3600  # 1 hour
+
+    def __str__(self):
+        return f'Reset token for {self.user.email}'
+
+
 # Proxy models for admin panel segmentation
 
 class AdminUserProxy(User):
-    """Staff/Admin users managed in the Admins section."""
     class Meta:
         proxy = True
         verbose_name = 'Admin'
@@ -80,7 +107,6 @@ class AdminUserProxy(User):
 
 
 class CompanyUserProxy(User):
-    """Business owners — registered with company information."""
     class Meta:
         proxy = True
         verbose_name = 'Company Account'
@@ -88,7 +114,6 @@ class CompanyUserProxy(User):
 
 
 class RegularUserProxy(User):
-    """General users — registered to use the service."""
     class Meta:
         proxy = True
         verbose_name = 'General User'

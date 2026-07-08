@@ -1,3 +1,4 @@
+﻿from django_ckeditor_5.fields import CKEditor5Field
 import uuid
 from django.db import models
 from django.conf import settings
@@ -24,6 +25,7 @@ class Category(models.Model):
     slug = models.SlugField(unique=True)
     icon = models.CharField(max_length=50, blank=True, help_text='Lucide icon name, e.g. "utensils"')
     description = models.TextField(blank=True)
+    cover_image = models.ImageField(upload_to='categories/', null=True, blank=True)
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='subcategories')
     listing_type = models.CharField(max_length=10, choices=ListingType.choices, default=ListingType.BUSINESS)
     order = models.PositiveIntegerField(default=0)
@@ -80,7 +82,7 @@ class Listing(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, max_length=220)
     short_description = models.CharField(max_length=300)
-    full_description = models.TextField()
+    full_description = CKEditor5Field(config_name='default')
     listing_status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     featured = models.BooleanField(default=False)
     featured_until = models.DateTimeField(null=True, blank=True)
@@ -119,6 +121,11 @@ class Listing(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     published_at = models.DateTimeField(null=True, blank=True)
+
+    # SEO
+    meta_title = models.CharField(max_length=70, blank=True)
+    meta_description = models.CharField(max_length=160, blank=True)
+    og_image = models.ImageField(upload_to='listings/og/', null=True, blank=True)
 
     class Meta:
         ordering = ['-featured', '-published_at', '-created_at']
