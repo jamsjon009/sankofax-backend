@@ -35,7 +35,8 @@ requirement documents. Full detail for each item is in
   - Follow-up (small): let business owners pick their own badges from the dashboard (API already accepts `badges`; UI not added yet).
 - [x] **2. "Connect" & "Collaborate" system** (+ inbox/messaging) — backend + frontend
   - Done: new `connections` app with `Connection` model, `/api/connections/` (inbox/sent list + create), accept/decline, unread count. Connect & Collaborate buttons + modal on listing detail; dashboard `/dashboard/inbox` with Received/Sent tabs and accept/decline.
-- [ ] **3. Business Type filter** in directory — backend + frontend
+- [x] **3. Business Type filter** in directory — backend + frontend
+  - Done: `business_type` field on Listing (Product / Service / Both / Nonprofit), directory filter + sidebar UI, shown on listing detail, editable in create/edit wizard, admin filter, seeded.
 - [ ] **4. Founder Story** field on business profiles — backend + frontend
 - [ ] **5. Company social links & services offered** — backend + frontend
 - [ ] **6. Live homepage statistics** (Businesses / Members / Partnerships) — backend + frontend
@@ -72,6 +73,7 @@ requirement documents. Full detail for each item is in
 ## Work log
 _Newest first. Each entry: date — what changed — which items._
 
+- **2026-07-26** — Item **#3 (Business Type filter)** completed and verified (field + directory filter + detail display + create/edit forms).
 - **2026-07-26** — Item **#2 (Connect & Collaborate system)** completed and verified (new `connections` app + endpoints, listing-detail buttons/modal, dashboard inbox). Also fixed the README to match the project.
 - **2026-07-26** — Item **#1 (Identity Badge system)** completed and verified end-to-end (backend model/API/filter/seed + frontend cards, detail, directory filter).
 - **2026-07-26** — Created progress tracker and gap-analysis document. No feature items started yet.

@@ -75,10 +75,19 @@ class Listing(models.Model):
         UPSCALE = '$$$', 'Upscale ($$$)'
         LUXURY = '$$$$', 'Luxury ($$$$)'
 
+    class BusinessType(models.TextChoices):
+        PRODUCT = 'product', 'Product-based'
+        SERVICE = 'service', 'Service-based'
+        BOTH = 'both', 'Product & Service'
+        NONPROFIT = 'nonprofit', 'Nonprofit / Community'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     company = models.ForeignKey('profiles.CompanyProfile', on_delete=models.CASCADE, related_name='listings')
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='listings')
     secondary_categories = models.ManyToManyField(Category, blank=True, related_name='secondary_listings')
+    business_type = models.CharField(max_length=12, choices=BusinessType.choices,
+                                     default=BusinessType.SERVICE,
+                                     help_text='The kind of business — used as a directory filter')
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, max_length=220)
     short_description = models.CharField(max_length=300)

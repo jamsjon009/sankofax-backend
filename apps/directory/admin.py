@@ -50,16 +50,16 @@ class AmenityAdmin(ModelAdmin):
 
 @admin.register(Listing)
 class ListingAdmin(ModelAdmin):
-    list_display = ['thumbnail', 'title', 'company', 'category', 'listing_status', 'city', 'featured', 'avg_rating', 'created_at']
+    list_display = ['thumbnail', 'title', 'company', 'category', 'business_type', 'listing_status', 'city', 'featured', 'avg_rating', 'created_at']
     list_per_page = 10
-    list_filter = ['listing_status', 'featured', 'category', 'country']
+    list_filter = ['listing_status', 'business_type', 'featured', 'category', 'country']
     search_fields = ['title', 'company__company_name', 'city', 'country']
     readonly_fields = ['slug', 'avg_rating', 'review_count', 'view_count', 'created_at', 'updated_at', 'published_at']
     inlines = [ListingImageInline]
     actions = ['approve_listings', 'reject_listings', 'feature_listings']
 
     fieldsets = (
-        ('Basic Info', {'fields': ('company', 'category', 'secondary_categories', 'title', 'slug', 'short_description', 'full_description')}),
+        ('Basic Info', {'fields': ('company', 'category', 'secondary_categories', 'business_type', 'title', 'slug', 'short_description', 'full_description')}),
         ('Status', {'fields': ('listing_status', 'featured', 'featured_until', 'reviewed_by', 'rejection_reason')}),
         ('Location', {'fields': ('address_line', 'city', 'state', 'country', 'postal_code', 'latitude', 'longitude')}),
         ('Contact', {'fields': ('phone', 'email', 'website', 'whatsapp')}),

@@ -222,7 +222,7 @@ class Command(BaseCommand):
                  full_description='Step into Sankofa Kitchen for a true taste of West Africa. Our chefs prepare traditional dishes using imported spices and locally sourced ingredients. Famous for our smoky suya skewers, peanut soup, and award-winning jollof rice.',
                  listing_status='published', city='London', country='United Kingdom',
                  address_line='45 Atlantic Road, Brixton', phone='+44 20 7946 0958',
-                 email='hello@sankofakitchen.co.uk', price_range='$$', featured=True,
+                 email='hello@sankofakitchen.co.uk', price_range='$$', featured=True, business_type='both',
                  published_at=now - timedelta(days=10), avg_rating='4.80', review_count=24),
             dict(company_key='owner1@sankofax.com', category_name='Restaurant & Food',
                  image_seeds=['listing-kitchen-peckham-1', 'listing-kitchen-peckham-2'],
@@ -231,7 +231,7 @@ class Command(BaseCommand):
                  full_description='The Peckham branch of Sankofa Kitchen brings the same delicious West African flavours to South East London. Dine in or take away. Catering available for events.',
                  listing_status='pending_review', city='London', country='United Kingdom',
                  address_line='12 Rye Lane, Peckham', phone='+44 20 7946 0959',
-                 email='peckham@sankofakitchen.co.uk', price_range='$$', featured=False,
+                 email='peckham@sankofakitchen.co.uk', price_range='$$', featured=False, business_type='both',
                  published_at=None, avg_rating='0', review_count=0),
             dict(company_key='owner2@sankofax.com', category_name='Technology & IT',
                  image_seeds=['listing-afrotech-dev-1', 'listing-afrotech-dev-2', 'listing-afrotech-dev-3'],
@@ -240,7 +240,7 @@ class Command(BaseCommand):
                  full_description='AfroTech Solutions is a Pan-African software house with teams in Lagos, Nairobi and New York. We build scalable fintech platforms, edtech tools and enterprise software.',
                  listing_status='published', city='New York', country='United States',
                  address_line='350 5th Avenue, Suite 4100', phone='+1 646 555 0201',
-                 email='info@afrotech.io', price_range='$$$', featured=True,
+                 email='info@afrotech.io', price_range='$$$', featured=True, business_type='service',
                  published_at=now - timedelta(days=5), avg_rating='4.90', review_count=11),
             dict(company_key='owner3@sankofax.com', category_name='Fashion & Clothing',
                  image_seeds=['listing-kente-fashion-1', 'listing-kente-fashion-2', 'listing-kente-fashion-3'],
@@ -249,7 +249,7 @@ class Command(BaseCommand):
                  full_description='Kente and Co celebrates African textile heritage with contemporary silhouettes. Each piece is hand-crafted using authentic Ghanaian Kente cloth and Nigerian Ankara fabric.',
                  listing_status='published', city='Atlanta', country='United States',
                  address_line='221 Auburn Avenue NE', phone='+1 929 555 0187',
-                 email='orders@kenteandco.com', price_range='$$$', featured=False,
+                 email='orders@kenteandco.com', price_range='$$$', featured=False, business_type='product',
                  published_at=now - timedelta(days=3), avg_rating='4.60', review_count=8),
             dict(company_key='owner2@sankofax.com', category_name='Technology & IT',
                  image_seeds=['listing-afrotech-mobile-1', 'listing-afrotech-mobile-2'],
@@ -258,7 +258,7 @@ class Command(BaseCommand):
                  full_description='Specialising in React Native and Flutter apps tailored for low-bandwidth African markets. Offline-first architecture, M-Pesa and Flutterwave payment integration.',
                  listing_status='pending_review', city='Nairobi', country='Kenya',
                  address_line='Westlands Business Park', phone='+254 700 123456',
-                 email='mobile@afrotech.io', price_range='$$', featured=False,
+                 email='mobile@afrotech.io', price_range='$$', featured=False, business_type='service',
                  published_at=None, avg_rating='0', review_count=0),
         ]
         from django.utils.text import slugify
@@ -288,6 +288,12 @@ class Command(BaseCommand):
             else:
                 lst = Listing.objects.get(slug=slug)
                 self._listings[title] = lst
+                # Backfill business_type on pre-existing rows
+                bt = d.get('business_type')
+                if bt and lst.business_type != bt:
+                    lst.business_type = bt
+                    lst.save(update_fields=['business_type'])
+                    self.stdout.write('  ~ business_type set for  ' + title)
                 # Backfill gallery images if none exist
                 if image_seeds and not lst.gallery_images.exists():
                     for seed in image_seeds:

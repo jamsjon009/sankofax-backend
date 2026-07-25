@@ -49,12 +49,14 @@ class ListingCardSerializer(serializers.ModelSerializer):
     cover_image = serializers.SerializerMethodField()
     gallery_images = serializers.SerializerMethodField()
     badges = serializers.SerializerMethodField()
+    business_type_display = serializers.CharField(source='get_business_type_display', read_only=True)
 
     class Meta:
         model = Listing
         fields = [
             'id', 'slug', 'title', 'short_description', 'city', 'country',
             'avg_rating', 'review_count', 'price_range', 'featured',
+            'business_type', 'business_type_display',
             'category_name', 'category_slug', 'company_name', 'company_verified',
             'cover_image', 'gallery_images', 'badges',
         ]
@@ -89,6 +91,7 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     company_verified = serializers.BooleanField(source='company.is_verified', read_only=True)
     company_logo = serializers.SerializerMethodField()
     badges = serializers.SerializerMethodField()
+    business_type_display = serializers.CharField(source='get_business_type_display', read_only=True)
 
     def get_company_logo(self, obj):
         if obj.company and obj.company.logo:
@@ -109,6 +112,7 @@ class ListingDetailSerializer(serializers.ModelSerializer):
             'listing_status', 'featured', 'address_line', 'city', 'state',
             'country', 'postal_code', 'latitude', 'longitude',
             'phone', 'email', 'website', 'whatsapp', 'price_range',
+            'business_type', 'business_type_display',
             'opening_hours', 'avg_rating', 'review_count', 'view_count',
             'category', 'amenities', 'gallery_images', 'badges',
             'company_name', 'company_slug', 'company_verified', 'company_logo',
@@ -125,7 +129,7 @@ class ListingCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Listing
         fields = [
-            'company', 'category', 'secondary_categories', 'title', 'short_description',
+            'company', 'category', 'secondary_categories', 'business_type', 'title', 'short_description',
             'full_description', 'address_line', 'city', 'state', 'country', 'postal_code',
             'latitude', 'longitude', 'phone', 'email', 'website', 'whatsapp',
             'price_range', 'opening_hours', 'amenity_ids',

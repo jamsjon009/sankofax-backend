@@ -4,6 +4,7 @@ from .models import Listing, Category
 
 class ListingFilter(django_filters.FilterSet):
     category = django_filters.CharFilter(field_name='category__slug')
+    business_type = django_filters.CharFilter()
     city = django_filters.CharFilter(lookup_expr='icontains')
     country = django_filters.CharFilter(lookup_expr='icontains')
     price_range = django_filters.CharFilter()
@@ -14,7 +15,7 @@ class ListingFilter(django_filters.FilterSet):
 
     class Meta:
         model = Listing
-        fields = ['category', 'city', 'country', 'price_range', 'featured']
+        fields = ['category', 'business_type', 'city', 'country', 'price_range', 'featured']
 
     def filter_amenities(self, queryset, name, value):
         slugs = [s.strip() for s in value.split(',') if s.strip()]
