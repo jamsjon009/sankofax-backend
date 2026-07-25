@@ -31,6 +31,7 @@ urlpatterns = [
         path('', include('apps.newsletter.urls')),
         path('', include('apps.core.urls')),
         path('', include('apps.blog.urls')),
+        path('', include('apps.connections.urls')),
     ])),
 
     # API docs
