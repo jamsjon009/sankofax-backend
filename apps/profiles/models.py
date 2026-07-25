@@ -31,6 +31,31 @@ class UserProfile(models.Model):
         return f'Profile: {self.user.email}'
 
 
+class IdentityBadge(models.Model):
+    """Ownership / identity tag for a business, e.g. Women-Owned, Black-Owned, LGBTQ+-Owned."""
+    name = models.CharField(max_length=80, unique=True)
+    slug = models.SlugField(unique=True, max_length=100)
+    icon = models.CharField(max_length=40, blank=True,
+        help_text='Optional emoji or icon name shown with the badge, e.g. ♀ or a lucide icon name')
+    color = models.CharField(max_length=7, blank=True,
+        help_text='Optional hex colour for the badge, e.g. #B5813B')
+    description = models.CharField(max_length=200, blank=True)
+    order = models.PositiveIntegerField(default=0, help_text='Lower = shown first')
+
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name = 'Identity Badge'
+        verbose_name_plural = 'Identity Badges'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = unique_slug(IdentityBadge, self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
 class CompanyProfile(models.Model):
     class Size(models.TextChoices):
         SOLO = 'solo', 'Solo'
@@ -52,6 +77,8 @@ class CompanyProfile(models.Model):
     contact_phone = models.CharField(max_length=20, blank=True)
     is_verified = models.BooleanField(default=False)
     verification_documents = models.FileField(upload_to='verifications/', null=True, blank=True)
+    badges = models.ManyToManyField(IdentityBadge, blank=True, related_name='companies',
+        help_text='Ownership / identity badges, e.g. Women-Owned, Black-Owned, LGBTQ+-Owned')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

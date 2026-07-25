@@ -1,6 +1,17 @@
 from rest_framework import generics, permissions
-from .models import UserProfile, CompanyProfile
-from .serializers import UserProfileSerializer, CompanyProfileSerializer, CompanyProfileCreateSerializer
+from .models import UserProfile, CompanyProfile, IdentityBadge
+from .serializers import (
+    UserProfileSerializer, CompanyProfileSerializer,
+    CompanyProfileCreateSerializer, IdentityBadgeSerializer,
+)
+
+
+class IdentityBadgeListView(generics.ListAPIView):
+    """Public list of all identity/ownership badges (for filters and forms)."""
+    queryset = IdentityBadge.objects.all()
+    serializer_class = IdentityBadgeSerializer
+    permission_classes = [permissions.AllowAny]
+    pagination_class = None
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):

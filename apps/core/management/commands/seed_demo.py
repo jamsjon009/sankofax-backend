@@ -13,6 +13,7 @@ class Command(BaseCommand):
         self._users()
         self._categories_amenities()
         self._companies()
+        self._identity_badges()
         self._listings()
         self._subscriptions()
         self._reviews()
@@ -170,6 +171,45 @@ class Command(BaseCommand):
                 else:
                     self.stdout.write('  ~ skip  ' + cp.company_name + ' (exists)')
                 self._companies[owner_email] = cp
+
+    def _identity_badges(self):
+        from apps.profiles.models import IdentityBadge
+        badges = [
+            ('Black-Owned', 'black-owned', '✊🏾', '#2a2420', 1),
+            ('Women-Owned', 'women-owned', '♀', '#b5813b', 2),
+            ('LGBTQ+-Owned', 'lgbtq-owned', '🏳️‍🌈', '#7c3aed', 3),
+            ('Veteran-Owned', 'veteran-owned', '🎖️', '#166534', 4),
+            ('Youth-Owned', 'youth-owned', '🌱', '#16a34a', 5),
+            ('Immigrant-Owned', 'immigrant-owned', '🌍', '#0369a1', 6),
+            ('Disability-Owned', 'disability-owned', '♿', '#0891b2', 7),
+            ('Minority-Owned', 'minority-owned', '🤝', '#9333ea', 8),
+        ]
+        self._badges = {}
+        for name, slug, icon, color, order in badges:
+            b, created = IdentityBadge.objects.get_or_create(
+                name=name, defaults={'slug': slug, 'icon': icon, 'color': color, 'order': order}
+            )
+            # Backfill correct slug if an earlier run stored a non-normalised one
+            if b.slug != slug:
+                b.slug = slug
+                b.save(update_fields=['slug'])
+            self._badges[name] = b
+            if created:
+                self.stdout.write('  + Badge  ' + name)
+        # Attach to demo companies
+        assignments = {
+            'owner1@sankofax.com': ['Black-Owned', 'Women-Owned'],
+            'owner2@sankofax.com': ['Black-Owned', 'Immigrant-Owned'],
+            'owner3@sankofax.com': ['Black-Owned', 'Women-Owned', 'LGBTQ+-Owned'],
+        }
+        for email, names in assignments.items():
+            cp = self._companies.get(email)
+            if not cp:
+                continue
+            if cp.badges.exists():
+                continue
+            cp.badges.set([self._badges[n] for n in names if n in self._badges])
+            self.stdout.write('  ~ badges set for  ' + cp.company_name)
 
     def _listings(self):
         from apps.directory.models import Listing, ListingImage
