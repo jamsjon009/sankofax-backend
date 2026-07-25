@@ -22,7 +22,7 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
         model = CompanyProfile
         fields = [
             'id', 'owner_email', 'company_name', 'slug', 'logo', 'cover_image',
-            'founded_year', 'company_size', 'description', 'website',
+            'founded_year', 'company_size', 'description', 'founder_story', 'website',
             'contact_email', 'contact_phone', 'is_verified', 'badges', 'created_at',
         ]
         read_only_fields = ['id', 'slug', 'is_verified', 'created_at', 'owner_email']
@@ -37,7 +37,7 @@ class CompanyProfileCreateSerializer(serializers.ModelSerializer):
         model = CompanyProfile
         fields = [
             'company_name', 'logo', 'cover_image', 'founded_year', 'company_size',
-            'description', 'website', 'contact_email', 'contact_phone',
+            'description', 'founder_story', 'website', 'contact_email', 'contact_phone',
             'verification_documents', 'badges',
         ]
 

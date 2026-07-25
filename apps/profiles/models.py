@@ -72,6 +72,8 @@ class CompanyProfile(models.Model):
     founded_year = models.PositiveIntegerField(null=True, blank=True)
     company_size = models.CharField(max_length=10, choices=Size.choices, default=Size.SOLO)
     description = CKEditor5Field(config_name='minimal', blank=True)
+    founder_story = models.TextField(blank=True,
+        help_text="The founder's journey — how and why the business started. Shown on the business profile.")
     website = models.URLField(blank=True)
     contact_email = models.EmailField(blank=True)
     contact_phone = models.CharField(max_length=20, blank=True)

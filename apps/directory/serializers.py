@@ -89,6 +89,7 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.company_name', read_only=True)
     company_slug = serializers.CharField(source='company.slug', read_only=True)
     company_verified = serializers.BooleanField(source='company.is_verified', read_only=True)
+    company_founder_story = serializers.CharField(source='company.founder_story', read_only=True, default='')
     company_logo = serializers.SerializerMethodField()
     badges = serializers.SerializerMethodField()
     business_type_display = serializers.CharField(source='get_business_type_display', read_only=True)
@@ -115,7 +116,7 @@ class ListingDetailSerializer(serializers.ModelSerializer):
             'business_type', 'business_type_display',
             'opening_hours', 'avg_rating', 'review_count', 'view_count',
             'category', 'amenities', 'gallery_images', 'badges',
-            'company_name', 'company_slug', 'company_verified', 'company_logo',
+            'company_name', 'company_slug', 'company_verified', 'company_founder_story', 'company_logo',
             'meta_title', 'meta_description', 'og_image',
             'created_at', 'published_at',
         ]
