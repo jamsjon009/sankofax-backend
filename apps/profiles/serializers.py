@@ -17,13 +17,18 @@ class IdentityBadgeSerializer(serializers.ModelSerializer):
 class CompanyProfileSerializer(serializers.ModelSerializer):
     owner_email = serializers.CharField(source='owner.email', read_only=True)
     badges = IdentityBadgeSerializer(many=True, read_only=True)
+    services_list = serializers.ListField(child=serializers.CharField(), read_only=True)
+    social_links = serializers.DictField(read_only=True)
 
     class Meta:
         model = CompanyProfile
         fields = [
             'id', 'owner_email', 'company_name', 'slug', 'logo', 'cover_image',
             'founded_year', 'company_size', 'description', 'founder_story', 'website',
-            'contact_email', 'contact_phone', 'is_verified', 'badges', 'created_at',
+            'contact_email', 'contact_phone', 'services', 'services_list',
+            'instagram_url', 'facebook_url', 'twitter_url', 'linkedin_url',
+            'youtube_url', 'tiktok_url', 'social_links',
+            'is_verified', 'badges', 'created_at',
         ]
         read_only_fields = ['id', 'slug', 'is_verified', 'created_at', 'owner_email']
 
@@ -38,7 +43,8 @@ class CompanyProfileCreateSerializer(serializers.ModelSerializer):
         fields = [
             'company_name', 'logo', 'cover_image', 'founded_year', 'company_size',
             'description', 'founder_story', 'website', 'contact_email', 'contact_phone',
-            'verification_documents', 'badges',
+            'services', 'instagram_url', 'facebook_url', 'twitter_url', 'linkedin_url',
+            'youtube_url', 'tiktok_url', 'verification_documents', 'badges',
         ]
 
     def create(self, validated_data):

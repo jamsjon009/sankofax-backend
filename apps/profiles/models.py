@@ -77,6 +77,18 @@ class CompanyProfile(models.Model):
     website = models.URLField(blank=True)
     contact_email = models.EmailField(blank=True)
     contact_phone = models.CharField(max_length=20, blank=True)
+
+    # Services offered (comma-separated), e.g. "Catering, Private events, Delivery"
+    services = models.TextField(blank=True, help_text='Comma-separated list of services offered')
+
+    # Social links
+    instagram_url = models.URLField(blank=True)
+    facebook_url = models.URLField(blank=True)
+    twitter_url = models.URLField(blank=True)
+    linkedin_url = models.URLField(blank=True)
+    youtube_url = models.URLField(blank=True)
+    tiktok_url = models.URLField(blank=True)
+
     is_verified = models.BooleanField(default=False)
     verification_documents = models.FileField(upload_to='verifications/', null=True, blank=True)
     badges = models.ManyToManyField(IdentityBadge, blank=True, related_name='companies',
@@ -94,3 +106,19 @@ class CompanyProfile(models.Model):
         if not self.slug:
             self.slug = unique_slug(CompanyProfile, self.company_name)
         super().save(*args, **kwargs)
+
+    @property
+    def services_list(self):
+        return [s.strip() for s in self.services.split(',') if s.strip()]
+
+    @property
+    def social_links(self):
+        links = {
+            'instagram': self.instagram_url,
+            'facebook': self.facebook_url,
+            'twitter': self.twitter_url,
+            'linkedin': self.linkedin_url,
+            'youtube': self.youtube_url,
+            'tiktok': self.tiktok_url,
+        }
+        return {k: v for k, v in links.items() if v}

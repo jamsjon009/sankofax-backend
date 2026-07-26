@@ -120,18 +120,25 @@ class Command(BaseCommand):
                  description='Authentic West African cuisine in the heart of London.',
                  founder_story='Zuri Mensah left Accra for London with her grandmother\'s recipes and a dream. What began as weekend suppers for homesick friends grew into Sankofa Kitchen — now one of Brixton\'s most-loved tables, keeping three generations of West African cooking alive in the diaspora.',
                  website='https://sankofakitchen.co.uk', contact_email='hello@sankofakitchen.co.uk',
+                 services='Dine-in, Takeaway, Catering, Private events, Delivery',
+                 instagram_url='https://instagram.com/sankofakitchen', facebook_url='https://facebook.com/sankofakitchen',
                  contact_phone='+44 20 7946 0958', company_size='1-10', founded_year=2018, is_verified=True),
             dict(owner_email='owner2@sankofax.com', company_name='AfroTech Solutions',
                  logo_seed='logo-afrotech', cover_seed='cover-afrotech',
                  description='Pan-African software development house building fintech and edtech products.',
                  founder_story='After years building payment systems abroad, Kofi Osei returned home determined to solve the problems he grew up with. AfroTech Solutions now spans Lagos, Nairobi and New York, engineering offline-first fintech for the realities of African markets.',
                  website='https://afrotech.io', contact_email='info@afrotech.io',
+                 services='Custom software, Mobile apps, Fintech platforms, API integration, Consulting',
+                 instagram_url='https://instagram.com/afrotech', linkedin_url='https://linkedin.com/company/afrotech',
+                 twitter_url='https://x.com/afrotech',
                  contact_phone='+1 646 555 0201', company_size='11-50', founded_year=2020, is_verified=True),
             dict(owner_email='owner3@sankofax.com', company_name='Kente and Co.',
                  logo_seed='logo-kente-co', cover_seed='cover-kente-co',
                  description='Luxury African fashion, bespoke Ankara and Kente garments shipped worldwide.',
                  founder_story='Nia Kamara learned to weave Kente at her grandfather\'s loom in Ghana. Frustrated that diaspora weddings rarely featured authentic cloth, she founded Kente and Co. to bring hand-crafted Ankara and Kente garments to celebrations around the world.',
                  website='https://kenteandco.com', contact_email='orders@kenteandco.com',
+                 services='Bespoke tailoring, Ready-to-wear, Wedding outfits, Worldwide shipping',
+                 instagram_url='https://instagram.com/kenteandco', tiktok_url='https://tiktok.com/@kenteandco',
                  contact_phone='+1 929 555 0187', company_size='solo', founded_year=2021, is_verified=False),
         ]
         self._companies = {}
@@ -172,6 +179,12 @@ class Command(BaseCommand):
                 if not cp.founder_story and d.get('founder_story'):
                     cp.founder_story = d['founder_story']
                     changed = True
+                # Backfill services & social links if missing
+                for f in ('services', 'instagram_url', 'facebook_url', 'twitter_url',
+                          'linkedin_url', 'youtube_url', 'tiktok_url'):
+                    if not getattr(cp, f) and d.get(f):
+                        setattr(cp, f, d[f])
+                        changed = True
                 if changed:
                     cp.save()
                     self.stdout.write('  ~ updated images for  ' + cp.company_name)

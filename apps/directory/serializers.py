@@ -90,6 +90,8 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     company_slug = serializers.CharField(source='company.slug', read_only=True)
     company_verified = serializers.BooleanField(source='company.is_verified', read_only=True)
     company_founder_story = serializers.CharField(source='company.founder_story', read_only=True, default='')
+    company_services = serializers.SerializerMethodField()
+    company_socials = serializers.SerializerMethodField()
     company_logo = serializers.SerializerMethodField()
     badges = serializers.SerializerMethodField()
     business_type_display = serializers.CharField(source='get_business_type_display', read_only=True)
@@ -99,6 +101,12 @@ class ListingDetailSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             return request.build_absolute_uri(obj.company.logo.url) if request else obj.company.logo.url
         return None
+
+    def get_company_services(self, obj):
+        return obj.company.services_list if obj.company else []
+
+    def get_company_socials(self, obj):
+        return obj.company.social_links if obj.company else {}
 
     def get_badges(self, obj):
         if not obj.company:
@@ -116,7 +124,8 @@ class ListingDetailSerializer(serializers.ModelSerializer):
             'business_type', 'business_type_display',
             'opening_hours', 'avg_rating', 'review_count', 'view_count',
             'category', 'amenities', 'gallery_images', 'badges',
-            'company_name', 'company_slug', 'company_verified', 'company_founder_story', 'company_logo',
+            'company_name', 'company_slug', 'company_verified', 'company_founder_story',
+            'company_services', 'company_socials', 'company_logo',
             'meta_title', 'meta_description', 'og_image',
             'created_at', 'published_at',
         ]
