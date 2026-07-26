@@ -504,6 +504,8 @@ class Command(BaseCommand):
             ('Diaspora Stories', 'Inspiring journeys from Black and African entrepreneurs.'),
             ('Culture & Heritage', 'Celebrating African culture, food, fashion and music.'),
             ('Platform Updates', 'News and feature announcements from the SankofaX team.'),
+            ('Success Stories', 'Business stories & legacy — founders and companies thriving across the diaspora.'),
+            ('Diaspora News', 'News and updates from across the global African diaspora.'),
         ]
         self._blog_categories = {}
         for name, desc in categories:
@@ -570,6 +572,37 @@ class Command(BaseCommand):
                  excerpt='Search engine optimisation sounds intimidating, but a few simple habits can dramatically boost your visibility.',
                  content='<p>SEO does not have to be complicated. Start with these fundamentals to help customers find you online.</p>'
                          '<h2>The basics</h2><p>Use clear titles, write descriptive content, and keep your business information consistent everywhere.</p>'),
+            # --- Success Stories (business stories & legacy) ---
+            dict(title='How Kente and Co. Grew From a Market Stall to a Global Brand',
+                 category='Success Stories', cover_seed='story-kente-legacy',
+                 tags='fashion, legacy, growth, atlanta', is_featured=True,
+                 read_time_minutes=7, view_count=534, days_ago=5,
+                 excerpt='A decade ago it was a single stall. Today Kente and Co. ships handcrafted garments to customers on four continents.',
+                 content='<p>What began as a weekend market stall in Atlanta is now a globally recognised name in African fashion.</p>'
+                         '<h2>Staying true to the craft</h2><p>"We never compromised on authenticity," the founder recalls. "Every piece honours the weavers who taught us."</p>'
+                         '<p>With SankofaX visibility and a loyal diaspora community, Kente and Co. now employs a team of 20 and mentors the next generation of designers.</p>'),
+            dict(title='A Family Legacy: Three Generations of West African Cooking',
+                 category='Success Stories', cover_seed='story-sankofa-legacy',
+                 tags='food, legacy, family, london', is_featured=False,
+                 read_time_minutes=6, view_count=311, days_ago=14,
+                 excerpt='Sankofa Kitchen proves that heritage recipes, done with love, can build a lasting business.',
+                 content='<p>From a grandmother\'s kitchen in Accra to a beloved Brixton institution, Sankofa Kitchen is a story of legacy and love.</p>'
+                         '<h2>Passing it on</h2><p>The founders now run cooking classes so the recipes — and the stories behind them — live on.</p>'),
+            # --- Diaspora News ---
+            dict(title='Diaspora Investment Summit Comes to Nairobi This Autumn',
+                 category='Diaspora News', cover_seed='news-nairobi-summit',
+                 tags='events, investment, nairobi, diaspora', is_featured=True,
+                 read_time_minutes=4, view_count=276, days_ago=3,
+                 excerpt='Founders, investors and diaspora leaders will gather in Nairobi to unlock cross-border opportunities.',
+                 content='<p>The inaugural Diaspora Investment Summit will bring together hundreds of founders and investors from across the diaspora.</p>'
+                         '<h2>What to expect</h2><p>Pitch sessions, matchmaking and workshops focused on building bridges between diaspora capital and African enterprise.</p>'),
+            dict(title='New Trade Corridor Opens Opportunities for Black-Owned Exporters',
+                 category='Diaspora News', cover_seed='news-trade-corridor',
+                 tags='trade, policy, export, africa', is_featured=False,
+                 read_time_minutes=5, view_count=188, days_ago=10,
+                 excerpt='Recent trade agreements are making it easier than ever for diaspora businesses to reach African markets.',
+                 content='<p>New trade agreements are lowering barriers for exporters, opening fresh opportunities for diaspora-owned businesses.</p>'
+                         '<h2>What it means for you</h2><p>Simplified customs and reduced tariffs mean small businesses can now compete across borders.</p>'),
         ]
         for p in posts:
             title = p['title']
