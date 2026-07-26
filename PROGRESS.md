@@ -29,7 +29,7 @@ requirement documents. Full detail for each item is in
 
 ## Phase 1 — Core requirement gaps + fixes (finish the MVP)
 
-> **Priority A complete (items 1–7)** ✅ — next up: Priority B (missing pages & broken links, items 8–11).
+> **Priority A complete (items 1–7)** ✅ — now on Priority B (missing pages & broken links, items 8–11).
 
 ### Priority A — core gaps
 - [x] **1. Ownership / Identity Badge system** (Women/Black/LGBTQ+/Asian-Owned…) — backend + frontend
@@ -50,7 +50,9 @@ requirement documents. Full detail for each item is in
   - Done: register form now has a Visitor / Business Owner selector that sends `account_type`; backend maps it to the user role (verified: business → business_owner, visitor → visitor).
 
 ### Priority B — missing pages & broken links
-- [ ] **8. Company public profile page** `/company/[slug]` — frontend
+- [x] **8. Company public profile page** `/company/[slug]` — frontend
+  - Done: full public page (cover, logo, verified, badges, about, founder story, services, social links, contact) + a grid of the company's published listings. Backend: added `company` filter to the listings API.
+  - Note: a dashboard **company-edit** page (to change founder story / services / socials after creation) is still missing — owners set these at creation or via admin. Good candidate for its own task.
 - [ ] **9. Standalone FAQ page** `/faqs` — frontend
 - [ ] **10. Legal/static pages** (Terms, Privacy, Cookies) — frontend + admin content
 - [ ] **11. Careers page** `/careers` (or link to Job Board) — frontend
@@ -80,6 +82,7 @@ requirement documents. Full detail for each item is in
 ## Work log
 _Newest first. Each entry: date — what changed — which items._
 
+- **2026-07-26** — Item **#8 (Company profile page)** completed and verified — `/company/[slug]` public page + listings `company` filter. Fixes the dead link from listing detail.
 - **2026-07-26** — Item **#7 (Signup role selection)** completed and verified — **Priority A (1–7) done**. Register sends `account_type`; role set correctly.
 - **2026-07-26** — Item **#6 (Live homepage stats)** completed and verified (public /api/stats/ + hero renders live Businesses/Members/Partnerships).
 - **2026-07-26** — Item **#5 (Social links & services offered)** completed and verified (company fields + APIs + listing-detail display + New Company form).

@@ -4,6 +4,7 @@ from .models import Listing, Category
 
 class ListingFilter(django_filters.FilterSet):
     category = django_filters.CharFilter(field_name='category__slug')
+    company = django_filters.CharFilter(field_name='company__slug')
     business_type = django_filters.CharFilter()
     city = django_filters.CharFilter(lookup_expr='icontains')
     country = django_filters.CharFilter(lookup_expr='icontains')
