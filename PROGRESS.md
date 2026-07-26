@@ -63,7 +63,9 @@ requirement documents. Full detail for each item is in
 ---
 
 ## Phase 2 — Business-plan growth features
-- [ ] **12. Verification tiers & workflow** (Level 1/2/3 + badge issuance) — backend + frontend
+- [x] **12. Verification tiers & workflow** (Level 1/2/3 + badge issuance) — backend + frontend
+  - Done. **Backend:** `CompanyProfile` gains `verification_level` (0 None / 1 Basic-automated / 2 Verified-documents / 3 Certified-partner), `verified_at`, `verification_expires_at`; `is_verified` kept in sync. New `VerificationRequest` model + workflow (`grant/revoke/approve/reject`). APIs: `GET /api/verification/companies/<slug>/` (owner status + automated-check results + latest request), `GET/POST /api/verification/requests/` (Level 1 auto-resolves from automated checks; Levels 2/3 require a document upload → pending admin review). Admin approve/reject actions + grant/revoke tier actions. Tier exposed on company + listing card/detail serializers. `expire_verifications` management command for periodic re-verification. Data migration backfills existing `is_verified=True` → Level 2.
+  - **Frontend:** `/dashboard/verification` page (current tier, "last granted/renews" dates, profile-completeness checks, per-tier request cards with document upload + admin-note feedback) + a `Verification` nav item. Tier-aware `VerificationBadge` component on listing cards, listing detail and the company page. Also fixed a latent bug: `myCompanies.list` now unwraps the paginated response.
 - [ ] **13. Job Board** — backend + frontend
 - [ ] **14. Discussion Forum / Community section** — backend + frontend
 - [ ] **15. Success Stories & Diaspora News** — backend + frontend
@@ -85,6 +87,7 @@ requirement documents. Full detail for each item is in
 ## Work log
 _Newest first. Each entry: date — what changed — which items._
 
+- **2026-07-26** — Item **#12 (Verification tiers & workflow)** done and verified — first Phase 2 feature. Backend: `verification_level` (0–3) + `verified_at`/`expires_at` on CompanyProfile, `VerificationRequest` model + submit→review workflow, Level-1 automated checks (auto-grant), Level-2/3 document review, admin approve/reject + grant/revoke actions, `expire_verifications` command, tier on listing/company APIs, backfill migration. Frontend: `/dashboard/verification` page + nav, tier-aware `VerificationBadge` on cards/detail/company page, dashboard CTA repointed. Also fixed `myCompanies.list` pagination unwrap. Verified end-to-end (L1 auto-grant, doc upload→pending, admin approve, revoke, expiry).
 - **2026-07-26** — Item **#11 (Careers page)** done and verified — self-contained `/careers` (hero + values grid + "Email us your CV" mailto CTA using the site contact email + directory CTA). **Priority B (8–11) complete → Phase 1 MVP done.**
 - **2026-07-26** — Item **#10 (Legal/static pages)** done and verified — `/terms`, `/privacy`, `/cookies` frontend routes (shared `LegalPage` component, admin-fed content + "Last updated"). Backend: `updated_at` added to `/api/pages/<slug>/`, data migration seeds the 3 pages, `cookies` added to `seed_demo`. Fixes the 3 footer dead links.
 - **2026-07-26** — Item **#9 (FAQ page)** done. Plus **layout fixes**: listing-detail & company pages widened to `max-w-7xl` (edges align with the site), 12-col 8/4 grid, sticky sidebar. About page rebuilt (fixed mojibake em-dashes + hero, consistent with Contact/FAQ). Pricing page widened to `max-w-7xl`, 4-plan grid (`sm:grid-cols-2 lg:grid-cols-4`) so the 4th card no longer sits alone, and the comparison table now scrolls on mobile.

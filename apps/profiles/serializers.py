@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserProfile, CompanyProfile, IdentityBadge
+from .models import UserProfile, CompanyProfile, IdentityBadge, VerificationRequest
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -19,6 +19,8 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
     badges = IdentityBadgeSerializer(many=True, read_only=True)
     services_list = serializers.ListField(child=serializers.CharField(), read_only=True)
     social_links = serializers.DictField(read_only=True)
+    verification_label = serializers.CharField(read_only=True)
+    is_verification_expired = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = CompanyProfile
@@ -28,9 +30,15 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
             'contact_email', 'contact_phone', 'services', 'services_list',
             'instagram_url', 'facebook_url', 'twitter_url', 'linkedin_url',
             'youtube_url', 'tiktok_url', 'social_links',
-            'is_verified', 'badges', 'created_at',
+            'is_verified', 'verification_level', 'verification_label',
+            'verified_at', 'verification_expires_at', 'is_verification_expired',
+            'badges', 'created_at',
         ]
-        read_only_fields = ['id', 'slug', 'is_verified', 'created_at', 'owner_email']
+        read_only_fields = [
+            'id', 'slug', 'is_verified', 'verification_level', 'verification_label',
+            'verified_at', 'verification_expires_at', 'is_verification_expired',
+            'created_at', 'owner_email',
+        ]
 
 
 class CompanyProfileCreateSerializer(serializers.ModelSerializer):
@@ -61,3 +69,21 @@ class CompanyProfileCreateSerializer(serializers.ModelSerializer):
         if badges is not None:
             company.badges.set(badges)
         return company
+
+
+class VerificationRequestSerializer(serializers.ModelSerializer):
+    requested_level_label = serializers.CharField(read_only=True)
+    company_name = serializers.CharField(source='company.company_name', read_only=True)
+    company_slug = serializers.CharField(source='company.slug', read_only=True)
+
+    class Meta:
+        model = VerificationRequest
+        fields = [
+            'id', 'company_slug', 'company_name', 'requested_level',
+            'requested_level_label', 'status', 'documents', 'note',
+            'admin_notes', 'reviewed_at', 'created_at',
+        ]
+        read_only_fields = [
+            'id', 'company_slug', 'company_name', 'requested_level_label',
+            'status', 'admin_notes', 'reviewed_at', 'created_at',
+        ]

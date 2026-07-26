@@ -46,6 +46,8 @@ class ListingCardSerializer(serializers.ModelSerializer):
     category_slug = serializers.CharField(source='category.slug', read_only=True)
     company_name = serializers.CharField(source='company.company_name', read_only=True)
     company_verified = serializers.BooleanField(source='company.is_verified', read_only=True)
+    company_verification_level = serializers.IntegerField(source='company.verification_level', read_only=True)
+    company_verification_label = serializers.CharField(source='company.verification_label', read_only=True)
     cover_image = serializers.SerializerMethodField()
     gallery_images = serializers.SerializerMethodField()
     badges = serializers.SerializerMethodField()
@@ -58,6 +60,7 @@ class ListingCardSerializer(serializers.ModelSerializer):
             'avg_rating', 'review_count', 'price_range', 'featured',
             'business_type', 'business_type_display',
             'category_name', 'category_slug', 'company_name', 'company_verified',
+            'company_verification_level', 'company_verification_label',
             'cover_image', 'gallery_images', 'badges',
         ]
 
@@ -89,6 +92,8 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.company_name', read_only=True)
     company_slug = serializers.CharField(source='company.slug', read_only=True)
     company_verified = serializers.BooleanField(source='company.is_verified', read_only=True)
+    company_verification_level = serializers.IntegerField(source='company.verification_level', read_only=True)
+    company_verification_label = serializers.CharField(source='company.verification_label', read_only=True)
     company_founder_story = serializers.CharField(source='company.founder_story', read_only=True, default='')
     company_services = serializers.SerializerMethodField()
     company_socials = serializers.SerializerMethodField()
@@ -124,7 +129,9 @@ class ListingDetailSerializer(serializers.ModelSerializer):
             'business_type', 'business_type_display',
             'opening_hours', 'avg_rating', 'review_count', 'view_count',
             'category', 'amenities', 'gallery_images', 'badges',
-            'company_name', 'company_slug', 'company_verified', 'company_founder_story',
+            'company_name', 'company_slug', 'company_verified',
+            'company_verification_level', 'company_verification_label',
+            'company_founder_story',
             'company_services', 'company_socials', 'company_logo',
             'meta_title', 'meta_description', 'og_image',
             'created_at', 'published_at',
