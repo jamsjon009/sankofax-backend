@@ -53,7 +53,8 @@ requirement documents. Full detail for each item is in
 - [x] **8. Company public profile page** `/company/[slug]` — frontend
   - Done: full public page (cover, logo, verified, badges, about, founder story, services, social links, contact) + a grid of the company's published listings. Backend: added `company` filter to the listings API.
   - Note: a dashboard **company-edit** page (to change founder story / services / socials after creation) is still missing — owners set these at creation or via admin. Good candidate for its own task.
-- [ ] **9. Standalone FAQ page** `/faqs` — frontend
+- [x] **9. Standalone FAQ page** `/faqs` — frontend
+  - Done: `/faqs` page (hero + admin-fed accordion, reuses FAQSection with an optional-heading toggle + Contact CTA). Fixes the footer dead link.
 - [ ] **10. Legal/static pages** (Terms, Privacy, Cookies) — frontend + admin content
 - [ ] **11. Careers page** `/careers` (or link to Job Board) — frontend
 
@@ -82,6 +83,7 @@ requirement documents. Full detail for each item is in
 ## Work log
 _Newest first. Each entry: date — what changed — which items._
 
+- **2026-07-26** — Item **#9 (FAQ page)** done. Plus **layout fixes**: listing-detail & company pages widened to `max-w-7xl` (edges align with the site), 12-col 8/4 grid, sticky sidebar. About page rebuilt (fixed mojibake em-dashes + hero, consistent with Contact/FAQ). Pricing page widened to `max-w-7xl`, 4-plan grid (`sm:grid-cols-2 lg:grid-cols-4`) so the 4th card no longer sits alone, and the comparison table now scrolls on mobile.
 - **2026-07-26** — Item **#8 (Company profile page)** completed and verified — `/company/[slug]` public page + listings `company` filter. Fixes the dead link from listing detail.
 - **2026-07-26** — Item **#7 (Signup role selection)** completed and verified — **Priority A (1–7) done**. Register sends `account_type`; role set correctly.
 - **2026-07-26** — Item **#6 (Live homepage stats)** completed and verified (public /api/stats/ + hero renders live Businesses/Members/Partnerships).
