@@ -42,7 +42,8 @@ requirement documents. Full detail for each item is in
   - Follow-up (small): editing an existing company's founder story from the dashboard needs the company edit page (ties into #8).
 - [x] **5. Company social links & services offered** — backend + frontend
   - Done: CompanyProfile gets `services` + 6 social URL fields (instagram/facebook/twitter/linkedin/youtube/tiktok), exposed via company API and on listing detail (`company_services`, `company_socials`). Shown as a "Services Offered" section + social icons; settable in the New Company form + admin; seeded.
-- [ ] **6. Live homepage statistics** (Businesses / Members / Partnerships) — backend + frontend
+- [x] **6. Live homepage statistics** (Businesses / Members / Partnerships) — backend + frontend
+  - Done: public `GET /api/stats/` (businesses = published listings, members = users, partnerships = accepted connections, + countries). Hero now renders these live instead of hardcoded numbers.
 - [ ] **7. Role selection at sign-up** (Business Owner vs Visitor) — frontend
 
 ### Priority B — missing pages & broken links
@@ -76,6 +77,7 @@ requirement documents. Full detail for each item is in
 ## Work log
 _Newest first. Each entry: date — what changed — which items._
 
+- **2026-07-26** — Item **#6 (Live homepage stats)** completed and verified (public /api/stats/ + hero renders live Businesses/Members/Partnerships).
 - **2026-07-26** — Item **#5 (Social links & services offered)** completed and verified (company fields + APIs + listing-detail display + New Company form).
 - **2026-07-26** — Item **#4 (Founder Story)** completed and verified (field + APIs + listing-detail section + New Company form).
 - **2026-07-26** — Item **#3 (Business Type filter)** completed and verified (field + directory filter + detail display + create/edit forms).

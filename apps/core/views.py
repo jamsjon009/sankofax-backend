@@ -63,6 +63,25 @@ class FAQListView(APIView):
         return Response([{'question': f.question, 'answer': f.answer} for f in faqs])
 
 
+class PublicStatsView(APIView):
+    """Public homepage statistics — businesses, members, partnerships (and extras)."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from apps.accounts.models import User
+        from apps.directory.models import Listing
+        from apps.connections.models import Connection
+
+        published = Listing.objects.filter(listing_status='published')
+        countries = published.exclude(country='').values('country').distinct().count()
+        return Response({
+            'businesses': published.count(),
+            'members': User.objects.count(),
+            'partnerships': Connection.objects.filter(status=Connection.Status.ACCEPTED).count(),
+            'countries': countries,
+        })
+
+
 class ContactView(APIView):
     permission_classes = [permissions.AllowAny]
 
