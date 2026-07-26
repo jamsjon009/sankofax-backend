@@ -29,6 +29,8 @@ requirement documents. Full detail for each item is in
 
 ## Phase 1 — Core requirement gaps + fixes (finish the MVP)
 
+> **Priority A complete (items 1–7)** ✅ — next up: Priority B (missing pages & broken links, items 8–11).
+
 ### Priority A — core gaps
 - [x] **1. Ownership / Identity Badge system** (Women/Black/LGBTQ+/Asian-Owned…) — backend + frontend
   - Done: `IdentityBadge` model + `CompanyProfile.badges` M2M, admin management, `/api/badges/`, badges on listing cards & detail, and an "Ownership & Identity" directory filter. 8 default badges seeded.
@@ -44,7 +46,8 @@ requirement documents. Full detail for each item is in
   - Done: CompanyProfile gets `services` + 6 social URL fields (instagram/facebook/twitter/linkedin/youtube/tiktok), exposed via company API and on listing detail (`company_services`, `company_socials`). Shown as a "Services Offered" section + social icons; settable in the New Company form + admin; seeded.
 - [x] **6. Live homepage statistics** (Businesses / Members / Partnerships) — backend + frontend
   - Done: public `GET /api/stats/` (businesses = published listings, members = users, partnerships = accepted connections, + countries). Hero now renders these live instead of hardcoded numbers.
-- [ ] **7. Role selection at sign-up** (Business Owner vs Visitor) — frontend
+- [x] **7. Role selection at sign-up** (Business Owner vs Visitor) — frontend
+  - Done: register form now has a Visitor / Business Owner selector that sends `account_type`; backend maps it to the user role (verified: business → business_owner, visitor → visitor).
 
 ### Priority B — missing pages & broken links
 - [ ] **8. Company public profile page** `/company/[slug]` — frontend
@@ -77,6 +80,7 @@ requirement documents. Full detail for each item is in
 ## Work log
 _Newest first. Each entry: date — what changed — which items._
 
+- **2026-07-26** — Item **#7 (Signup role selection)** completed and verified — **Priority A (1–7) done**. Register sends `account_type`; role set correctly.
 - **2026-07-26** — Item **#6 (Live homepage stats)** completed and verified (public /api/stats/ + hero renders live Businesses/Members/Partnerships).
 - **2026-07-26** — Item **#5 (Social links & services offered)** completed and verified (company fields + APIs + listing-detail display + New Company form).
 - **2026-07-26** — Item **#4 (Founder Story)** completed and verified (field + APIs + listing-detail section + New Company form).
