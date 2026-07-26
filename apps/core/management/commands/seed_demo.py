@@ -677,3 +677,35 @@ class Command(BaseCommand):
                     status=Testimonial.Status.APPROVED,
                 )
                 self.stdout.write('  + Testimonial  ' + email)
+
+        # Community / forum — sample threads + replies
+        from apps.community.models import ForumCategory, Thread, Reply
+        forum_seed = [
+            ('business-networking', 'owner1@sankofax.com',
+             'Looking to collaborate with other diaspora food businesses',
+             'We run Sankofa Kitchen in London and would love to partner with African-owned '
+             'suppliers and caterers across the UK. Anyone open to collaborating on pop-up events?',
+             [('owner3@sankofax.com', 'Kente and Co. would love to do a fashion + food pop-up! DM me.'),
+              ('user1@sankofax.com', 'As a customer I would 100% attend this. Please post dates!')]),
+            ('tips-resources', 'owner2@sankofax.com',
+             'What tools are you using to manage bookings and payments?',
+             'Curious what the community recommends for invoicing and online payments — especially '
+             'anything that works well across both the US and African markets.',
+             [('owner1@sankofax.com', 'We use Stripe for cards and it has been smooth so far.')]),
+        ]
+        for cat_slug, author_email, title, body, replies in forum_seed:
+            cat = ForumCategory.objects.filter(slug=cat_slug).first()
+            if not cat:
+                continue
+            try:
+                author = User.objects.get(email=author_email)
+            except User.DoesNotExist:
+                continue
+            if Thread.objects.filter(title=title).exists():
+                continue
+            thread = Thread.objects.create(category=cat, author=author, title=title, body=body)
+            for reply_email, reply_body in replies:
+                ru = User.objects.filter(email=reply_email).first()
+                if ru:
+                    Reply.objects.create(thread=thread, author=ru, body=reply_body)
+            self.stdout.write('  + Thread  ' + title[:40])

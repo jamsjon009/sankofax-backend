@@ -32,6 +32,7 @@ urlpatterns = [
         path('', include('apps.core.urls')),
         path('', include('apps.blog.urls')),
         path('', include('apps.connections.urls')),
+        path('', include('apps.community.urls')),
     ])),
 
     # API docs
