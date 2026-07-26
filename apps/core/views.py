@@ -49,7 +49,11 @@ class PageDetailView(APIView):
     def get(self, request, slug):
         try:
             page = Page.objects.get(slug=slug, is_active=True)
-            return Response({'title': page.title, 'content': page.content})
+            return Response({
+                'title': page.title,
+                'content': page.content,
+                'updated_at': page.updated_at,
+            })
         except Page.DoesNotExist:
             from rest_framework.exceptions import NotFound
             raise NotFound()

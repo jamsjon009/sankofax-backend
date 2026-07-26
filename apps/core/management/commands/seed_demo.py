@@ -627,6 +627,8 @@ class Command(BaseCommand):
                  content='<h2>Terms of Service</h2><p>By using SankofaX you agree to our terms and conditions. Please use the platform respectfully and in accordance with all applicable laws.</p><p>This is placeholder demo content.</p>'),
             dict(title='Privacy Policy', slug='privacy',
                  content='<h2>Privacy Policy</h2><p>We respect your privacy and are committed to protecting your personal data. We only collect what is necessary to provide our services.</p><p>This is placeholder demo content.</p>'),
+            dict(title='Cookie Policy', slug='cookies',
+                 content='<h2>Cookie Policy</h2><p>SankofaX uses essential cookies to keep you signed in and analytics cookies to understand how the platform is used. You can manage cookies from your browser settings.</p><p>This is placeholder demo content.</p>'),
         ]
         for d in pages:
             if not Page.objects.filter(slug=d['slug']).exists():

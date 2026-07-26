@@ -29,7 +29,7 @@ requirement documents. Full detail for each item is in
 
 ## Phase 1 — Core requirement gaps + fixes (finish the MVP)
 
-> **Priority A complete (items 1–7)** ✅ — now on Priority B (missing pages & broken links, items 8–11).
+> **Priority A (1–7) ✅ and Priority B (8–11) ✅ complete.** Phase 1 MVP gaps all done — next up is Phase 2 (growth features, items 12+).
 
 ### Priority A — core gaps
 - [x] **1. Ownership / Identity Badge system** (Women/Black/LGBTQ+/Asian-Owned…) — backend + frontend
@@ -55,8 +55,10 @@ requirement documents. Full detail for each item is in
   - Note: a dashboard **company-edit** page (to change founder story / services / socials after creation) is still missing — owners set these at creation or via admin. Good candidate for its own task.
 - [x] **9. Standalone FAQ page** `/faqs` — frontend
   - Done: `/faqs` page (hero + admin-fed accordion, reuses FAQSection with an optional-heading toggle + Contact CTA). Fixes the footer dead link.
-- [ ] **10. Legal/static pages** (Terms, Privacy, Cookies) — frontend + admin content
-- [ ] **11. Careers page** `/careers` (or link to Job Board) — frontend
+- [x] **10. Legal/static pages** (Terms, Privacy, Cookies) — frontend + admin content
+  - Done: `/terms`, `/privacy`, `/cookies` frontend routes (thin pages sharing a `LegalPage` component that renders admin content + a "Last updated" date + Contact CTA). Backend already had the `Page` model + `/api/pages/<slug>/`; added `updated_at` to that response and a data migration (`0008_seed_legal_pages`) that seeds the three pages so the footer links always resolve. Admins edit copy in Django admin (Core → Pages). Also seeded `cookies` in `seed_demo`.
+- [x] **11. Careers page** `/careers` (or link to Job Board) — frontend
+  - Done: self-contained `/careers` page (hero, "Why work with us" values grid, "Open positions" section with an "Email us your CV" mailto CTA that uses the site contact email, and a Browse-the-Directory CTA). Frontend-only per the requirement; no Job Board dependency. Fixes the last footer dead link. When the Job Board (#13) ships, the "Open positions" section can link to it.
 
 ---
 
@@ -83,6 +85,8 @@ requirement documents. Full detail for each item is in
 ## Work log
 _Newest first. Each entry: date — what changed — which items._
 
+- **2026-07-26** — Item **#11 (Careers page)** done and verified — self-contained `/careers` (hero + values grid + "Email us your CV" mailto CTA using the site contact email + directory CTA). **Priority B (8–11) complete → Phase 1 MVP done.**
+- **2026-07-26** — Item **#10 (Legal/static pages)** done and verified — `/terms`, `/privacy`, `/cookies` frontend routes (shared `LegalPage` component, admin-fed content + "Last updated"). Backend: `updated_at` added to `/api/pages/<slug>/`, data migration seeds the 3 pages, `cookies` added to `seed_demo`. Fixes the 3 footer dead links.
 - **2026-07-26** — Item **#9 (FAQ page)** done. Plus **layout fixes**: listing-detail & company pages widened to `max-w-7xl` (edges align with the site), 12-col 8/4 grid, sticky sidebar. About page rebuilt (fixed mojibake em-dashes + hero, consistent with Contact/FAQ). Pricing page widened to `max-w-7xl`, 4-plan grid (`sm:grid-cols-2 lg:grid-cols-4`) so the 4th card no longer sits alone, and the comparison table now scrolls on mobile.
 - **2026-07-26** — Item **#8 (Company profile page)** completed and verified — `/company/[slug]` public page + listings `company` filter. Fixes the dead link from listing detail.
 - **2026-07-26** — Item **#7 (Signup role selection)** completed and verified — **Priority A (1–7) done**. Register sends `account_type`; role set correctly.
