@@ -481,18 +481,49 @@ class Command(BaseCommand):
                  description='Connecting Black founders, investors and mentors across the diaspora.',
                  city='New York', country='United States', venue_name='Brooklyn Museum',
                  start_datetime=now + timedelta(days=15), end_datetime=now + timedelta(days=15, hours=8),
-                 ticket_url='https://blacktechsummit.com', ticket_price='25.00', status='published'),
+                 ticket_price='25.00', status='published',
+                 rsvp_enabled=True, capacity=3, allow_waitlist=True),
             dict(organizer=company, category=cat,
                  title='Diaspora Wellness and Culture Fair',
                  description='Yoga, meditation, African herbal medicine stalls, food vendors and live drumming.',
                  city='Atlanta', country='United States', venue_name='Piedmont Park',
                  start_datetime=now + timedelta(days=8), end_datetime=now + timedelta(days=8, hours=6),
-                 ticket_url='', ticket_price='0.00', status='published'),
+                 ticket_url='', ticket_price='0.00', status='published',
+                 rsvp_enabled=True, capacity=None, allow_waitlist=True),
         ]
         for d in events_data:
             if not Event.objects.filter(title=d['title']).exists():
                 Event.objects.create(**d)
                 self.stdout.write('  + Event  ' + d['title'])
+        self._event_registrations()
+
+    def _event_registrations(self):
+        from apps.accounts.models import User
+        from apps.events.models import Event, EventRegistration
+        # Fill the capacity-limited event so the waitlist path is visible in the demo.
+        event = Event.objects.filter(title='Black Tech Founders Summit').first()
+        if not event or event.registrations.exists():
+            return
+        signups = [
+            ('user1@sankofax.com', 2),   # -> confirmed (2/3)
+            ('user2@sankofax.com', 1),   # -> confirmed (3/3, now full)
+            ('user3@sankofax.com', 1),   # -> waitlisted
+        ]
+        for email, qty in signups:
+            user = User.objects.filter(email=email).first()
+            if not user:
+                continue
+            confirmed = event.confirmed_count
+            if event.capacity is None or confirmed + qty <= event.capacity:
+                st = EventRegistration.Status.CONFIRMED
+            else:
+                st = EventRegistration.Status.WAITLISTED
+            EventRegistration.objects.create(
+                event=event, attendee=user,
+                name=(user.get_full_name() or '').strip() or user.email.split('@')[0],
+                email=user.email, quantity=qty, status=st,
+            )
+            self.stdout.write(f'  + RSVP   {email} -> {event.title} ({st})')
 
     def _blog(self):
         from apps.accounts.models import User
