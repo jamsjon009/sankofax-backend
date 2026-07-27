@@ -22,6 +22,7 @@ class Command(BaseCommand):
         self._events()
         self._marketplace()
         self._blog()
+        self._promotions()
         self._core_content()
         self.stdout.write('\n>>> Done! Demo data seeded.\n')
 
@@ -604,6 +605,29 @@ class Command(BaseCommand):
                 note='Interested in a mobile banking MVP.',
             )
             self.stdout.write('  + Booking  Free Intro Call (pending request)')
+
+    def _promotions(self):
+        from apps.promotions.models import StoryPackage, StorySubmission
+        founder = StoryPackage.objects.filter(slug='founder-story-feature').first()
+        kente = self._companies.get('owner3@sankofax.com')
+        if not (founder and kente):
+            return
+        owner = kente.owner
+        # One paid submission awaiting review.
+        if not StorySubmission.objects.filter(company=kente, title__startswith='How Kente').exists():
+            from django.utils import timezone
+            sub = StorySubmission.objects.create(
+                package=founder, company=kente, submitted_by=owner, kind=founder.kind,
+                title='How Kente and Co. Took Ghanaian Weaving Global',
+                body=('Nia Kamara grew up at her grandfather\'s loom in Ghana.\n\n'
+                      'Frustrated that diaspora weddings rarely featured authentic cloth, she '
+                      'founded Kente and Co. to bring hand-crafted garments to celebrations '
+                      'around the world. Today the brand ships to 20 countries.'),
+                contact_email=kente.contact_email or owner.email,
+                amount=founder.price, currency=founder.currency,
+                status=StorySubmission.Status.IN_REVIEW, paid_at=timezone.now(),
+            )
+            self.stdout.write('  + Story    ' + sub.reference + ' (in review)')
 
     def _blog(self):
         from apps.accounts.models import User

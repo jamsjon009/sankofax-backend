@@ -33,6 +33,7 @@ urlpatterns = [
         path('', include('apps.blog.urls')),
         path('', include('apps.connections.urls')),
         path('', include('apps.community.urls')),
+        path('', include('apps.promotions.urls')),
     ])),
 
     # API docs
