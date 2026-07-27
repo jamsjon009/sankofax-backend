@@ -20,6 +20,7 @@ class Command(BaseCommand):
         self._crm()
         self._newsletter()
         self._events()
+        self._marketplace()
         self._blog()
         self._core_content()
         self.stdout.write('\n>>> Done! Demo data seeded.\n')
@@ -524,6 +525,85 @@ class Command(BaseCommand):
                 email=user.email, quantity=qty, status=st,
             )
             self.stdout.write(f'  + RSVP   {email} -> {event.title} ({st})')
+
+    def _marketplace(self):
+        from apps.accounts.models import User
+        from apps.marketplace.models import Product, Service, Order, OrderItem, ServiceBooking
+
+        fashion = self._categories.get('Fashion & Clothing')
+        food = self._categories.get('Restaurant & Food')
+        tech = self._categories.get('Technology & IT')
+        kente = self._companies.get('owner3@sankofax.com')
+        kitchen = self._companies.get('owner1@sankofax.com')
+        afrotech = self._companies.get('owner2@sankofax.com')
+
+        # --- Products (buy in-platform) ---
+        products = [
+            dict(company=kente, category=fashion, name='Hand-woven Kente Scarf',
+                 description='Authentic hand-woven Kente scarf in royal gold and green. One size.',
+                 price='45.00', currency='USD', stock_status='in_stock'),
+            dict(company=kente, category=fashion, name='Bespoke Ankara Dress',
+                 description='Made-to-order Ankara dress tailored to your measurements. Choose your print.',
+                 price='180.00', currency='USD', stock_status='made_to_order'),
+            dict(company=kitchen, category=food, name='West African Spice Blend (3-pack)',
+                 description='Suya, jollof and pepper-soup spice blends. Ships worldwide.',
+                 price='24.00', currency='USD', stock_status='in_stock'),
+        ]
+        self._products = {}
+        for d in products:
+            if d['company'] and not Product.objects.filter(name=d['name']).exists():
+                p = Product.objects.create(**d)
+                self._products[d['name']] = p
+                self.stdout.write('  + Product  ' + d['name'])
+            else:
+                self._products[d['name']] = Product.objects.filter(name=d['name']).first()
+
+        # --- Services (book in-platform) ---
+        services = [
+            dict(company=afrotech, category=tech, name='Fintech Product Consultation',
+                 description='A 60-minute strategy session with our senior product team.',
+                 price='150.00', currency='USD', duration_minutes=60, is_virtual=True),
+            dict(company=afrotech, category=tech, name='Free Intro Call',
+                 description='A 20-minute introductory call to discuss your project — no charge.',
+                 price='0.00', currency='USD', duration_minutes=20, is_virtual=True),
+            dict(company=kitchen, category=food, name='Private Catering Consultation',
+                 description='Plan your event menu with our head chef (in-person, London).',
+                 price='75.00', currency='USD', duration_minutes=45, is_virtual=False, location='London, UK'),
+        ]
+        self._services = {}
+        for d in services:
+            if d['company'] and not Service.objects.filter(name=d['name']).exists():
+                s = Service.objects.create(**d)
+                self._services[d['name']] = s
+                self.stdout.write('  + Service  ' + d['name'])
+            else:
+                self._services[d['name']] = Service.objects.filter(name=d['name']).first()
+
+        # --- Sample order + bookings (so dashboards aren't empty) ---
+        u1 = User.objects.filter(email='user1@sankofax.com').first()
+        u2 = User.objects.filter(email='user2@sankofax.com').first()
+        scarf = self._products.get('Hand-woven Kente Scarf')
+        if u1 and scarf and not Order.objects.filter(buyer=u1, company=scarf.company).exists():
+            order = Order.objects.create(
+                buyer=u1, company=scarf.company, currency='USD', total='90.00',
+                contact_name='Marcus Williams', contact_email=u1.email,
+                shipping_address='12 Peckham Rd, London', status=Order.Status.PAID,
+                paid_at=timezone.now(),
+            )
+            OrderItem.objects.create(order=order, product=scarf, name=scarf.name,
+                                     unit_price=scarf.price, quantity=2)
+            self.stdout.write('  + Order    ' + order.order_number + ' (paid)')
+
+        free_call = self._services.get('Free Intro Call')
+        if u2 and free_call and not ServiceBooking.objects.filter(customer=u2, service=free_call).exists():
+            ServiceBooking.objects.create(
+                service=free_call, company=free_call.company, customer=u2,
+                service_name=free_call.name, scheduled_for=timezone.now() + timedelta(days=5),
+                currency='USD', total='0.00', contact_name='Aisha Johnson',
+                contact_email=u2.email, status=ServiceBooking.Status.PENDING,
+                note='Interested in a mobile banking MVP.',
+            )
+            self.stdout.write('  + Booking  Free Intro Call (pending request)')
 
     def _blog(self):
         from apps.accounts.models import User
