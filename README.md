@@ -88,13 +88,33 @@ CREATE DATABASE sankofax;
 python manage.py migrate
 ```
 
-### 7. Load demo data
+### 7. Load data
+
+Run these in order. All are **idempotent** — safe to re-run; existing rows are skipped
+or updated in place.
+
 ```bash
+# a) Demo data — users, categories, companies, listings, plans, reviews, badges,
+#    blog posts, testimonials, pages, FAQs, events, marketplace, promotions, etc.
 python manage.py seed_demo
+
+# b) The 15 real businesses from Content/Company Descriptions_2025 (item #21)
+python manage.py seed_real_businesses
+
+# c) Real, topical photos for listings/categories/companies/blogs (item images)
+python manage.py seed_real_images            # fill where an image is missing
+#   or, to also replace existing placeholder (random) images with topical ones:
+python manage.py seed_real_images --force
+
+# d) Map coordinates from addresses (item #20). Needed after real addresses are added.
+python manage.py geocode_locations
 ```
-Creates demo users, categories, amenities, companies, listings, subscription plans,
-reviews, identity badges, blog posts, testimonials, pages, FAQs, events and newsletter
-subscribers. Safe to re-run — existing rows are skipped.
+
+> The confirmed regional pricing (Directory Basic/Pro/Elite — North $15/$29/$49,
+> South $7.50/$14.50/$24.50) and the editable homepage copy + real FAQs are loaded
+> automatically by data migrations in step 6, so no extra command is needed for those.
+
+See **[Management Commands](#management-commands)** below for the full list and options.
 
 ### 8. Create a superuser
 ```bash
@@ -190,6 +210,39 @@ Representative endpoints (see `/api/docs/` for the complete, live list):
 | GET | `/api/admin/stats/` | Admin dashboard statistics (staff only) |
 
 Full, always-current docs: `http://localhost:8000/api/docs/`
+
+---
+
+## Management Commands
+
+All custom commands live under each app's `management/commands/`. Run with
+`python manage.py <command>`. Every command is idempotent unless noted.
+
+### Data & seeding
+| Command | What it does |
+|---|---|
+| `seed_demo` | Full demo dataset (users, categories, companies, listings, plans, reviews, badges, blog, testimonials, pages, FAQs, events, marketplace, promotions). |
+| `seed_real_businesses` | Seeds the 15 real businesses from `Content/Company Descriptions_2025` (item #21) — a `CompanyProfile` + published `Listing` each, owned by the `partners@sankofax.com` curator account until claimed. |
+| `seed_real_images` | Fills real, topical photos (loremflickr, picsum fallback) for listings, categories, companies and blog posts. `--force` also replaces existing placeholder images. Options: `--force`, `--sleep <s>`. |
+| `geocode_locations` | Fills latitude/longitude from addresses for listings & events (item #20). Options: `--force`, `--listings`, `--events`, `--limit <n>`, `--sleep <s>`. |
+| `seed_data` / `seed_blog_data` | Older / blog-only seed helpers (superseded by `seed_demo`). |
+
+### Periodic (run on a schedule — cron / Celery beat)
+| Command | What it does |
+|---|---|
+| `expire_verifications` | Downgrades companies whose verification tier has expired (item #12). |
+| `expire_featured_stories` | Un-features promoted stories whose paid feature window has ended (item #18). |
+
+### Standard Django
+| Command | What it does |
+|---|---|
+| `migrate` | Apply DB migrations (also seeds confirmed pricing, homepage copy, legal pages & real FAQs via data migrations). |
+| `createsuperuser` | Create an admin login. |
+| `collectstatic --no-input` | Gather static files for production. |
+| `test` | Run the test suite. |
+| `runserver` | Start the dev server. |
+
+**Recommended first-run order:** `migrate` → `seed_demo` → `seed_real_businesses` → `seed_real_images` → `geocode_locations` → `createsuperuser`.
 
 ---
 
