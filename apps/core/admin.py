@@ -1,6 +1,27 @@
 ﻿from django.contrib import admin
 from unfold.admin import ModelAdmin
-from .models import SiteSetting, Page, FAQ, Testimonial
+from .models import SiteSetting, HomeContent, Page, FAQ, Testimonial
+
+
+@admin.register(HomeContent)
+class HomeContentAdmin(ModelAdmin):
+    fieldsets = [
+        ('Hero', {'fields': ['hero_badge', 'hero_title', 'hero_title_highlight',
+                             'hero_subtitle', 'hero_popular_searches']}),
+        ('Why List Your Brand', {'fields': ['why_list_title', 'why_list_subtitle', 'why_list_benefits'],
+            'description': 'Benefits is a list of {"title", "desc"} cards — the five card icons are fixed in the design.'}),
+        ('Mission & Vision', {'fields': ['mission_title', 'mission_body', 'vision_title', 'vision_body']}),
+        ('Pricing Section', {'fields': ['pricing_title', 'pricing_subtitle', 'pricing_note'],
+            'description': 'Intro copy above the pricing table. The plans/prices themselves live under Subscriptions → Plans.'}),
+        ('Call to Action', {'fields': ['cta_title', 'cta_subtitle']}),
+        ('Newsletter', {'fields': ['newsletter_title', 'newsletter_subtitle']}),
+    ]
+
+    def has_add_permission(self, request):
+        return not HomeContent.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(SiteSetting)

@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import permissions, serializers as drf_serializers
 from django.core.mail import send_mail
 from django.conf import settings as django_settings
-from .models import SiteSetting, Page, FAQ, Testimonial
+from .models import SiteSetting, HomeContent, Page, FAQ, Testimonial
 
 
 class ContactSerializer(drf_serializers.Serializer):
@@ -40,6 +40,35 @@ class SiteSettingView(APIView):
             'google_tag_manager_id': site.google_tag_manager_id,
             'google_analytics_id': site.google_analytics_id,
             'google_search_console_code': site.google_search_console_code,
+        })
+
+
+class HomeContentView(APIView):
+    """Public: editable homepage marketing copy (item #22)."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        c = HomeContent.get()
+        return Response({
+            'hero_badge': c.hero_badge,
+            'hero_title': c.hero_title,
+            'hero_title_highlight': c.hero_title_highlight,
+            'hero_subtitle': c.hero_subtitle,
+            'hero_popular_searches': c.popular_searches_list,
+            'why_list_title': c.why_list_title,
+            'why_list_subtitle': c.why_list_subtitle,
+            'why_list_benefits': c.why_list_benefits or [],
+            'mission_title': c.mission_title,
+            'mission_body': c.mission_body,
+            'vision_title': c.vision_title,
+            'vision_body': c.vision_body,
+            'pricing_title': c.pricing_title,
+            'pricing_subtitle': c.pricing_subtitle,
+            'pricing_note': c.pricing_note,
+            'cta_title': c.cta_title,
+            'cta_subtitle': c.cta_subtitle,
+            'newsletter_title': c.newsletter_title,
+            'newsletter_subtitle': c.newsletter_subtitle,
         })
 
 

@@ -69,6 +69,109 @@ class SiteSetting(models.Model):
         return obj
 
 
+def _default_benefits():
+    return [
+        {'title': 'Global Visibility',
+         'desc': 'Appear in location-based, category-based, and cultural keyword searches across the diaspora.'},
+        {'title': 'Credibility',
+         'desc': 'Be part of a verified ecosystem of trusted diaspora businesses with reviews and a professional profile.'},
+        {'title': 'Connection',
+         'desc': 'Get discovered by collaborators, clients, and new audiences who want to support you.'},
+        {'title': 'Promotion',
+         'desc': 'Get featured in our newsletters, blogs, and on social media.'},
+        {'title': 'Performance Insights',
+         'desc': 'Track how many people view or save your profile with your business dashboard.'},
+    ]
+
+
+class HomeContent(models.Model):
+    """Editable marketing copy for the homepage (item #22).
+
+    Singleton (pk=1). Every field has a sensible default so the frontend can fall
+    back gracefully; blanks on the API are simply not overridden client-side.
+    """
+    # Hero
+    hero_badge = models.CharField(max_length=140, blank=True,
+        default='The Global Black & African Business Directory')
+    hero_title = models.CharField(max_length=200, blank=True,
+        default='The Global Directory for',
+        help_text='First line of the hero headline (shown in white).')
+    hero_title_highlight = models.CharField(max_length=200, blank=True,
+        default='Black & African-Owned Businesses',
+        help_text='Second line of the hero headline (shown in the accent colour).')
+    hero_subtitle = models.TextField(blank=True,
+        default='From Lagos to London, Nairobi to New Orleans — we’re uniting the global '
+                'African diaspora through visibility, community, and commerce.')
+    hero_popular_searches = models.CharField(max_length=300, blank=True,
+        default='Restaurants, Wellness, Tech Companies, Therapists, Creatives, Hair & Beauty',
+        help_text='Comma-separated quick-search chips shown under the hero search bar.')
+
+    # Why list your brand
+    why_list_title = models.CharField(max_length=200, blank=True, default='Why List Your Brand?')
+    why_list_subtitle = models.TextField(blank=True,
+        default='Getting listed on SankofaX instantly places your brand in front of a global '
+                'audience actively looking to support Black and African-owned businesses.')
+    why_list_benefits = models.JSONField(default=_default_benefits, blank=True,
+        help_text='List of {"title", "desc"} cards. Icons are fixed in the design; edit the text here.')
+
+    # Mission & vision
+    mission_title = models.CharField(max_length=120, blank=True, default='Our Mission')
+    mission_body = models.TextField(blank=True,
+        default='SankofaX exists to amplify the reach, recognition, and resilience of Black-owned '
+                'businesses across the globe — because we believe that economic liberation is the '
+                'foundation of cultural empowerment, and connection is where it begins.')
+    vision_title = models.CharField(max_length=120, blank=True, default='Our Vision')
+    vision_body = models.TextField(blank=True,
+        default='To become the largest, most inclusive digital directory for Black-owned businesses '
+                'across the diaspora — a place where heritage, innovation, and community come '
+                'together to thrive.')
+
+    # Pricing section intro
+    pricing_title = models.CharField(max_length=200, blank=True,
+        default='Fair Pricing for a Global Community')
+    pricing_subtitle = models.TextField(blank=True,
+        default='We recognize the economic differences between regions, and we believe equitable '
+                'access is non-negotiable. That’s why we offer tiered pricing.')
+    pricing_note = models.TextField(blank=True,
+        default='Not sure which region you fall into? We’ll verify your location at signup and '
+                'apply the appropriate rate automatically.')
+
+    # Final CTA
+    cta_title = models.CharField(max_length=250, blank=True,
+        default='Join the Directory. Be Seen. Be Supported. Be SankofaX.')
+    cta_subtitle = models.TextField(blank=True,
+        default='Join thousands of businesses already connecting with the diaspora community. '
+                'Get listed in minutes.')
+
+    # Newsletter
+    newsletter_title = models.CharField(max_length=140, blank=True, default='Stay Connected')
+    newsletter_subtitle = models.TextField(blank=True,
+        default='Featured businesses, global Black events, and diaspora spotlights — no spam, '
+                'unsubscribe anytime.')
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Home Content'
+        verbose_name_plural = 'Home Content'
+
+    def __str__(self):
+        return 'Homepage Content'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    @property
+    def popular_searches_list(self):
+        return [s.strip() for s in self.hero_popular_searches.split(',') if s.strip()]
+
+
 class Page(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)

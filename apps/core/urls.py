@@ -1,8 +1,9 @@
 ﻿from django.urls import path
-from .views import SiteSettingView, PageDetailView, FAQListView, ContactView, AdminStatsView, TestimonialListView, TestimonialSubmitView, PublicStatsView
+from .views import SiteSettingView, HomeContentView, PageDetailView, FAQListView, ContactView, AdminStatsView, TestimonialListView, TestimonialSubmitView, PublicStatsView
 
 urlpatterns = [
     path('site-settings/', SiteSettingView.as_view(), name='site-settings'),
+    path('home-content/', HomeContentView.as_view(), name='home-content'),
     path('pages/<slug:slug>/', PageDetailView.as_view(), name='page-detail'),
     path('faqs/', FAQListView.as_view(), name='faq-list'),
     path('stats/', PublicStatsView.as_view(), name='public-stats'),

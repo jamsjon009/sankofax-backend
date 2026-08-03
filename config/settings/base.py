@@ -331,6 +331,11 @@ UNFOLD = {
                         "link": "/admin/core/sitesetting/",
                     },
                     {
+                        "title": "Home Content",
+                        "icon": "home_app_logo",
+                        "link": "/admin/core/homecontent/",
+                    },
+                    {
                         "title": "Pages",
                         "icon": "description",
                         "link": "/admin/core/page/",
