@@ -27,6 +27,24 @@ class EventSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'slug', 'organizer_name', 'created_at']
 
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        self._maybe_geocode(instance)
+        return instance
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        self._maybe_geocode(instance)
+        return instance
+
+    def _maybe_geocode(self, instance):
+        """Auto-fill coordinates from the venue/city when the client didn't
+        supply them. Explicit lat/long always wins."""
+        data = self.initial_data
+        if data.get('latitude') in (None, '') and data.get('longitude') in (None, ''):
+            from apps.core.geocoding import geocode_event
+            geocode_event(instance, force=True)
+
     def get_my_registration(self, obj):
         """The requesting user's active registration for this event, if any."""
         request = self.context.get('request')

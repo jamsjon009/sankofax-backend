@@ -21,6 +21,13 @@ class EventAdmin(ModelAdmin):
     search_fields = ['title', 'organizer__company_name', 'city']
     readonly_fields = ['slug', 'created_at']
     inlines = [EventRegistrationInline]
+    actions = ['geocode_selected']
+
+    @admin.action(description='Geocode selected (address → map coordinates)')
+    def geocode_selected(self, request, queryset):
+        from apps.core.geocoding import geocode_event
+        updated = sum(1 for obj in queryset if geocode_event(obj, force=True))
+        self.message_user(request, f'Geocoded {updated} of {queryset.count()} event(s).')
 
 
 @admin.register(EventRegistration)

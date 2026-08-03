@@ -56,7 +56,7 @@ class ListingAdmin(ModelAdmin):
     search_fields = ['title', 'company__company_name', 'city', 'country']
     readonly_fields = ['slug', 'avg_rating', 'review_count', 'view_count', 'created_at', 'updated_at', 'published_at']
     inlines = [ListingImageInline]
-    actions = ['approve_listings', 'reject_listings', 'feature_listings']
+    actions = ['approve_listings', 'reject_listings', 'feature_listings', 'geocode_selected']
 
     fieldsets = (
         ('Basic Info', {'fields': ('company', 'category', 'secondary_categories', 'business_type', 'title', 'slug', 'short_description', 'full_description')}),
@@ -93,3 +93,9 @@ class ListingAdmin(ModelAdmin):
     @admin.action(description='Mark as Featured')
     def feature_listings(self, request, queryset):
         queryset.update(featured=True)
+
+    @admin.action(description='Geocode selected (address → map coordinates)')
+    def geocode_selected(self, request, queryset):
+        from apps.core.geocoding import geocode_listing
+        updated = sum(1 for obj in queryset if geocode_listing(obj, force=True))
+        self.message_user(request, f'Geocoded {updated} of {queryset.count()} listing(s).')

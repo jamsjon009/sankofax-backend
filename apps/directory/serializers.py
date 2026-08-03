@@ -154,4 +154,19 @@ class ListingCreateUpdateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['listing_status'] = Listing.Status.PENDING
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        self._maybe_geocode(instance)
+        return instance
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        self._maybe_geocode(instance)
+        return instance
+
+    def _maybe_geocode(self, instance):
+        """Auto-fill coordinates from the address when the client didn't supply
+        them (e.g. the owner edited the address). Explicit lat/long always wins."""
+        data = self.initial_data
+        if data.get('latitude') in (None, '') and data.get('longitude') in (None, ''):
+            from apps.core.geocoding import geocode_listing
+            geocode_listing(instance, force=True)

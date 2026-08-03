@@ -164,6 +164,12 @@ STRIPE_PUBLIC_KEY = env('STRIPE_PUBLIC_KEY', default='')
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default='')
 
+# Geocoding (address → lat/lng for the directory map — item #20).
+# Provider: 'nominatim' (OpenStreetMap, free, no key) | 'mapbox' | 'none' (disabled).
+GEOCODER = env('GEOCODER', default='nominatim')
+NOMINATIM_URL = env('NOMINATIM_URL', default='https://nominatim.openstreetmap.org/search')
+MAPBOX_TOKEN = env('MAPBOX_TOKEN', default='')
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@sankofax.com')
 
