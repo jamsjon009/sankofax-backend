@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
+    country_from_request, country_to_region,
 )
 from .models import EmailVerificationToken, PasswordResetToken
 from .emails import send_verification_email, send_password_reset_email
@@ -33,6 +34,20 @@ class RegisterView(generics.CreateAPIView):
             'refresh': str(refresh),
             'user': UserSerializer(user).data,
         }, status=status.HTTP_201_CREATED)
+
+
+class RegionView(APIView):
+    """Detect the visitor's region from geo headers so pricing can default to
+    the right tier automatically. Returns blank values when undetectable
+    (e.g. local dev) — the client keeps its own default in that case."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        country = country_from_request(request)
+        return Response({
+            'country': country,
+            'region': country_to_region(country) if country else '',
+        })
 
 
 class LoginView(APIView):

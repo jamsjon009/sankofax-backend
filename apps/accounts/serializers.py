@@ -17,6 +17,22 @@ def country_to_region(country_code):
     return User.Region.GLOBAL_SOUTH
 
 
+def country_from_request(request):
+    """Best-effort ISO country code from geo headers (Cloudflare / proxy).
+
+    Returns '' when the location can't be determined (e.g. local dev with no
+    edge in front). Behind Cloudflare the CF-IPCountry header is set on every
+    request, including calls to the API, so signup can verify location for real.
+    """
+    if request is None:
+        return ''
+    return (
+        request.META.get('HTTP_CF_IPCOUNTRY', '')
+        or request.META.get('HTTP_X_COUNTRY', '')
+        or ''
+    ).strip().upper()[:2]
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password2 = serializers.CharField(write_only=True)
@@ -40,7 +56,11 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password2')
         account_type = validated_data.pop('account_type', 'visitor')
-        country = validated_data.get('country', '')
+
+        # Country: use what the client sent, else auto-detect from geo headers.
+        country = validated_data.get('country') or country_from_request(self.context.get('request'))
+        if country:
+            validated_data['country'] = country
 
         # Auto-derive region from country if not explicitly provided
         if not validated_data.get('region') and country:
