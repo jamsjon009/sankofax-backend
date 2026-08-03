@@ -34,6 +34,7 @@ urlpatterns = [
         path('', include('apps.connections.urls')),
         path('', include('apps.community.urls')),
         path('', include('apps.promotions.urls')),
+        path('', include('apps.analytics.urls')),
     ])),
 
     # API docs
