@@ -4,6 +4,7 @@ from .views import (
     RegisterView, LoginView, LogoutView, MeView,
     VerifyEmailView, ResendVerificationView,
     ForgotPasswordView, ResetPasswordView, RegionView,
+    UpgradeToBusinessView,
 )
 
 urlpatterns = [
@@ -13,6 +14,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('me/', MeView.as_view(), name='me'),
+    path('upgrade-to-business/', UpgradeToBusinessView.as_view(), name='upgrade-to-business'),
 
     # Email verification
     path('verify-email/', VerifyEmailView.as_view(), name='verify-email'),

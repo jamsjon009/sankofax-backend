@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 
+from apps.accounts.permissions import IsBusinessOwner
 from .models import Product, Service, Order, OrderItem, ServiceBooking
 from .serializers import (
     ProductSerializer, ServiceSerializer, OrderSerializer, ServiceBookingSerializer,
@@ -26,7 +27,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [permissions.IsAuthenticated()]
+            return [IsBusinessOwner()]
         return [permissions.AllowAny()]
 
 
@@ -41,7 +42,7 @@ class ServiceViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [permissions.IsAuthenticated()]
+            return [IsBusinessOwner()]
         return [permissions.AllowAny()]
 
 

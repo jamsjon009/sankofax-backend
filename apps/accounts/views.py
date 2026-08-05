@@ -89,35 +89,79 @@ class MeView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
     def update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
         instance = self.get_object()
 
-        # Handle avatar upload + resize
-        if 'avatar' in request.FILES:
-            avatar_file = request.FILES['avatar']
-            try:
-                from PIL import Image as PILImage
-                import io
-                from django.core.files.uploadedfile import InMemoryUploadedFile
+        # Handle the avatar ourselves (resize + re-encode to JPEG) and save it
+        # directly on the instance. Doing this outside the serializer avoids a
+        # DRF pitfall: reading the uploaded stream here and then swapping
+        # request.FILES doesn't reliably reach the serializer's cached
+        # request.data, which previously left small in-memory uploads (PNGs,
+        # screenshots) looking "corrupted" and failing validation.
+        avatar_file = request.FILES.get('avatar')
+        if avatar_file is not None:
+            instance.avatar = self._process_avatar(avatar_file, instance)
+            instance.save(update_fields=['avatar'])
 
-                img = PILImage.open(avatar_file)
-                img = img.convert('RGB')
-                max_size = (400, 400)
-                img.thumbnail(max_size, PILImage.LANCZOS)
+        # Update any remaining writable fields (skip avatar — already handled).
+        data = {k: v for k, v in request.data.items() if k != 'avatar'}
+        serializer = self.get_serializer(instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(self.get_serializer(instance).data)
 
-                output = io.BytesIO()
-                img.save(output, format='JPEG', quality=85)
-                output.seek(0)
+    @staticmethod
+    def _process_avatar(avatar_file, instance):
+        """Validate, resize (max 400x400) and re-encode the avatar to JPEG.
 
-                filename = f"avatar_{instance.id}.jpg"
-                request.FILES['avatar'] = InMemoryUploadedFile(
-                    output, 'ImageField', filename,
-                    'image/jpeg', output.getbuffer().nbytes, None
-                )
-            except Exception:
-                pass  # Pillow not available or error — save original
+        Returns a ContentFile ready to assign to instance.avatar. Raises a DRF
+        ValidationError with a clear message on oversize or unsupported files.
+        """
+        from rest_framework.exceptions import ValidationError
+        from django.conf import settings
+        import io
 
-        return super().update(request, *args, **kwargs)
+        max_size = getattr(settings, 'MAX_UPLOAD_SIZE', 10 * 1024 * 1024)
+        if getattr(avatar_file, 'size', 0) > max_size:
+            mb = max_size // (1024 * 1024)
+            raise ValidationError({'avatar': [f'Image is too large. Please upload a file under {mb}MB.']})
+
+        try:
+            from PIL import Image as PILImage
+            from django.core.files.base import ContentFile
+
+            avatar_file.seek(0)
+            img = PILImage.open(avatar_file)
+            img = img.convert('RGB')
+            resample = getattr(getattr(PILImage, 'Resampling', PILImage), 'LANCZOS')
+            img.thumbnail((400, 400), resample)
+
+            output = io.BytesIO()
+            img.save(output, format='JPEG', quality=85)
+            return ContentFile(output.getvalue(), name=f'avatar_{instance.id}.jpg')
+        except ValidationError:
+            raise
+        except Exception:
+            raise ValidationError(
+                {'avatar': ['That file is not a supported image. Please upload a JPG, PNG or WebP.']}
+            )
+
+
+class UpgradeToBusinessView(APIView):
+    """Upgrade the current visitor to a Business Owner.
+
+    Free role flip so a visitor can start listing a business. Idempotent —
+    users who are already business owners (or admins/staff) just get their
+    current profile back. Higher roles (staff/admin/super_admin) are never
+    downgraded.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if user.role == User.Role.VISITOR:
+            user.role = User.Role.BUSINESS_OWNER
+            user.save(update_fields=['role'])
+        return Response(UserSerializer(user).data)
 
 
 class VerifyEmailView(APIView):

@@ -42,6 +42,7 @@ class ListingImageSerializer(serializers.ModelSerializer):
 
 class ListingCardSerializer(serializers.ModelSerializer):
     """Compact serializer for list/card views."""
+    avg_rating = serializers.FloatField(read_only=True)  # number, not "4.50" string
     category_name = serializers.CharField(source='category.name', read_only=True)
     category_slug = serializers.CharField(source='category.slug', read_only=True)
     company_name = serializers.CharField(source='company.company_name', read_only=True)
@@ -58,7 +59,7 @@ class ListingCardSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'slug', 'title', 'short_description', 'city', 'country',
             'avg_rating', 'review_count', 'price_range', 'featured',
-            'business_type', 'business_type_display',
+            'business_type', 'business_type_display', 'listing_status', 'view_count',
             'category_name', 'category_slug', 'company_name', 'company_verified',
             'company_verification_level', 'company_verification_label',
             'cover_image', 'gallery_images', 'badges',
@@ -86,6 +87,7 @@ class ListingCardSerializer(serializers.ModelSerializer):
 
 
 class ListingDetailSerializer(serializers.ModelSerializer):
+    avg_rating = serializers.FloatField(read_only=True)  # number, not "4.50" string
     category = CategorySerializer(read_only=True)
     amenities = AmenitySerializer(many=True, read_only=True)
     gallery_images = ListingImageSerializer(many=True, read_only=True)
@@ -100,6 +102,14 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     company_logo = serializers.SerializerMethodField()
     badges = serializers.SerializerMethodField()
     business_type_display = serializers.CharField(source='get_business_type_display', read_only=True)
+    is_saved = serializers.SerializerMethodField()
+
+    def get_is_saved(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        if not user or not user.is_authenticated:
+            return False
+        return obj.saved_by.filter(user=user).exists()
 
     def get_company_logo(self, obj):
         if obj.company and obj.company.logo:
@@ -128,7 +138,7 @@ class ListingDetailSerializer(serializers.ModelSerializer):
             'phone', 'email', 'website', 'whatsapp', 'price_range',
             'business_type', 'business_type_display',
             'opening_hours', 'avg_rating', 'review_count', 'view_count',
-            'category', 'amenities', 'gallery_images', 'badges',
+            'category', 'amenities', 'gallery_images', 'badges', 'is_saved',
             'company_name', 'company_slug', 'company_verified',
             'company_verification_level', 'company_verification_label',
             'company_founder_story',

@@ -10,6 +10,7 @@ from .serializers import (
     CompanyProfileCreateSerializer, IdentityBadgeSerializer,
     VerificationRequestSerializer,
 )
+from apps.accounts.permissions import IsBusinessOwner
 
 
 class IdentityBadgeListView(generics.ListAPIView):
@@ -30,7 +31,13 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
 
 class CompanyListCreateView(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    """List the user's own companies (any authenticated user) or create a new
+    one (business owners only)."""
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsBusinessOwner()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         return CompanyProfile.objects.filter(owner=self.request.user)
