@@ -350,10 +350,15 @@ class Command(BaseCommand):
         ]
         self._plans = {}
         for d in plans_data:
-            plan, created = Plan.objects.get_or_create(name=d['name'], defaults=d)
-            self._plans[plan.name] = plan
-            if created:
+            # Plan.name isn't unique and the confirmed-pricing migration seeds
+            # region-scoped plans, so a name can match more than one row —
+            # get_or_create would raise MultipleObjectsReturned. Reuse the first
+            # existing plan of that name, else create it.
+            plan = Plan.objects.filter(name=d['name']).first()
+            if plan is None:
+                plan = Plan.objects.create(**d)
                 self.stdout.write('  + Plan  ' + plan.name)
+            self._plans[plan.name] = plan
         now = timezone.now()
         subs_data = [
             ('owner1@sankofax.com', 'Growth', 'active', now + timedelta(days=20)),
