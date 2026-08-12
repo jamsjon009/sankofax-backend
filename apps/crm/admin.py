@@ -1,4 +1,4 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from unfold.admin import ModelAdmin, TabularInline
 from .models import Lead, LeadNote, SupportTicket
 
@@ -13,6 +13,7 @@ class LeadNoteInline(TabularInline):
 @admin.register(Lead)
 class LeadAdmin(ModelAdmin):
     list_display = ['name', 'email', 'source', 'status', 'assigned_to', 'created_at']
+    list_per_page = 10
     list_filter = ['status', 'source', 'assigned_to']
     search_fields = ['name', 'email']
     inlines = [LeadNoteInline]
@@ -21,5 +22,6 @@ class LeadAdmin(ModelAdmin):
 @admin.register(SupportTicket)
 class SupportTicketAdmin(ModelAdmin):
     list_display = ['subject', 'user', 'status', 'priority', 'assigned_to', 'created_at']
+    list_per_page = 10
     list_filter = ['status', 'priority', 'assigned_to']
     search_fields = ['subject', 'user__email']

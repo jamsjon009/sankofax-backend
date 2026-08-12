@@ -37,6 +37,7 @@ THIRD_PARTY_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'storages',
+    'django_ckeditor_5',
 ]
 
 LOCAL_APPS = [
@@ -50,6 +51,11 @@ LOCAL_APPS = [
     'apps.marketplace',
     'apps.newsletter',
     'apps.core',
+    'apps.blog',
+    'apps.connections',
+    'apps.community',
+    'apps.promotions',
+    'apps.analytics',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -65,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'apps.core.middleware.PageViewMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -113,6 +120,12 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = env('MEDIA_ROOT', default=str(BASE_DIR / 'media'))
 
+# Allow image/document uploads up to 10 MB (avatars, logos, covers, verification docs).
+# (nginx client_max_body_size is 20M in prod, so this is the effective limit.)
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
+FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1
@@ -157,6 +170,12 @@ STRIPE_PUBLIC_KEY = env('STRIPE_PUBLIC_KEY', default='')
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default='')
 
+# Geocoding (address → lat/lng for the directory map — item #20).
+# Provider: 'nominatim' (OpenStreetMap, free, no key) | 'mapbox' | 'none' (disabled).
+GEOCODER = env('GEOCODER', default='nominatim')
+NOMINATIM_URL = env('NOMINATIM_URL', default='https://nominatim.openstreetmap.org/search')
+MAPBOX_TOKEN = env('MAPBOX_TOKEN', default='')
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@sankofax.com')
 
@@ -170,6 +189,12 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
+
+# Where to send users after login/logout (default Django value is /accounts/profile/,
+# which does not exist in this project and causes a 404 after admin login).
+LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = '/admin/'
+LOGOUT_REDIRECT_URL = '/admin/login/'
 
 UNFOLD = {
     "SITE_TITLE": "SankofaX",
@@ -287,6 +312,48 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Blog",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Blog Posts",
+                        "icon": "article",
+                        "link": "/admin/blog/blogpost/",
+                    },
+                    {
+                        "title": "Blog Categories",
+                        "icon": "label",
+                        "link": "/admin/blog/blogcategory/",
+                    },
+                ],
+            },
+            {
+                "title": "Settings",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Site Settings",
+                        "icon": "settings",
+                        "link": "/admin/core/sitesetting/",
+                    },
+                    {
+                        "title": "Home Content",
+                        "icon": "home_app_logo",
+                        "link": "/admin/core/homecontent/",
+                    },
+                    {
+                        "title": "Pages",
+                        "icon": "description",
+                        "link": "/admin/core/page/",
+                    },
+                    {
+                        "title": "FAQs",
+                        "icon": "quiz",
+                        "link": "/admin/core/faq/",
+                    },
+                ],
+            },
+            {
                 "title": "Marketing",
                 "separator": True,
                 "items": [
@@ -305,8 +372,46 @@ UNFOLD = {
                         "icon": "shopping_bag",
                         "link": "/admin/marketplace/product/",
                     },
+                    {
+                        "title": "Testimonials",
+                        "icon": "rate_review",
+                        "link": "/admin/core/testimonial/",
+                        "badge": "apps.core.dashboard.pending_testimonials_badge",
+                    },
                 ],
             },
         ],
     },
 }
+
+
+# CKEditor 5 config
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': [
+            'heading', '|',
+            'bold', 'italic', 'underline', 'strikethrough', '|',
+            'link', 'blockQuote', 'code', '|',
+            'bulletedList', 'numberedList', '|',
+            'insertImage', 'mediaEmbed', '|',
+            'insertTable', 'horizontalLine', '|',
+            'undo', 'redo',
+        ],
+        'image': {
+            'toolbar': ['imageTextAlternative', 'imageTitle', '|', 'imageStyle:alignLeft', 'imageStyle:alignRight', 'imageStyle:alignCenter', 'imageStyle:side'],
+        },
+        'table': {
+            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells'],
+        },
+        'height': '400px',
+        'width': '100%',
+    },
+    'minimal': {
+        'toolbar': ['bold', 'italic', 'link', 'bulletedList', 'numberedList'],
+        'height': '200px',
+        'width': '100%',
+    },
+}
+
+CKEDITOR_5_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+CKEDITOR_5_UPLOAD_FILE_TYPES = ['jpeg', 'jpg', 'png', 'gif', 'webp']

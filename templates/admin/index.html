@@ -1,4 +1,4 @@
-{% extends "unfold/layouts/base_simple.html" %}
+﻿{% extends "unfold/layouts/base_simple.html" %}
 {% load i18n static %}
 
 {% block breadcrumbs %}{% endblock %}
@@ -14,8 +14,8 @@
 <!-- Header -->
 <div class="flex items-start justify-between mb-7">
   <div>
-    <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white m-0 mb-1">👋 Dashboard</h1>
-    <p class="text-xs text-gray-400 m-0">Platform overview — SankofaX Global Business Directory</p>
+    <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white m-0 mb-1">Dashboard</h1>
+    <p class="text-xs text-gray-400 m-0">Platform overview &mdash; SankofaX Global Business Directory</p>
   </div>
   <div class="text-right">
     <div id="skx-time" class="text-xl font-bold text-gray-800 dark:text-gray-100"></div>
@@ -24,12 +24,12 @@
 </div>
 
 <!-- KPI Cards -->
-<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
   {% for c in kpi %}
   <a href="{{ c.url }}" class="kpi-card block rounded-2xl p-4 text-white no-underline"
      style="background: linear-gradient(135deg, {{ c.bg }}ee, {{ c.bg }}99)">
     <span class="ki material-symbols-outlined text-2xl mb-2 block">{{ c.icon }}</span>
-    <span class="kv text-4xl font-black leading-none block">{{ c.value }}</span>
+    <span class="kv text-3xl font-black leading-none block">{{ c.value }}</span>
     <span class="kl text-xs font-semibold mt-1 block opacity-95">{{ c.title }}</span>
     <span class="ks text-[10px] block opacity-70 mt-0.5">{{ c.subtitle }}</span>
   </a>
@@ -37,9 +37,7 @@
 </div>
 
 <!-- Charts Row -->
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-6">
-
-  <!-- Line Chart -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-5">
   <div class="xl:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
     <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
       <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
@@ -48,12 +46,8 @@
       </h3>
       <span class="text-xs text-gray-400">Users &amp; Listings</span>
     </div>
-    <div class="p-5">
-      <canvas id="lineChart" height="110"></canvas>
-    </div>
+    <div class="p-5"><canvas id="lineChart" height="110"></canvas></div>
   </div>
-
-  <!-- Donut Chart -->
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
     <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
       <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
@@ -66,11 +60,10 @@
       <div id="donut-legend" class="mt-3 w-full flex flex-col gap-1.5"></div>
     </div>
   </div>
-
 </div>
 
-<!-- Bottom Row -->
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-6">
+<!-- Row 2: Pending + Leads + Tickets -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-5">
 
   <!-- Pending Listings -->
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
@@ -79,44 +72,48 @@
         <span class="material-symbols-outlined text-amber-500" style="font-size:16px">pending</span>
         Pending Review
       </h3>
-      <a href="/admin/directory/listing/?listing_status=pending_review" class="text-xs text-indigo-500 font-semibold hover:underline">View all →</a>
+      <a href="/admin/directory/listing/?listing_status=pending_review" class="text-xs text-indigo-500 font-semibold hover:underline">View all &rarr;</a>
     </div>
     {% if recent_pending %}
       {% for item in recent_pending %}
       <a href="/admin/directory/listing/{{ item.id }}/change/"
          class="skx-row flex items-center gap-3 px-5 py-2.5 border-b border-gray-50 dark:border-white/5 no-underline last:border-b-0 hover:bg-gray-50 dark:hover:bg-white/5">
-        <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-lg flex-shrink-0">🏪</div>
+        <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-amber-500" style="font-size:16px">storefront</span>
+        </div>
         <div class="flex-1 min-w-0">
           <div class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{{ item.title }}</div>
-          <div class="text-xs text-gray-400 truncate">{{ item.category__name }}</div>
+          <div class="text-xs text-gray-400 truncate">{{ item.company__company_name }} &middot; {{ item.category__name }}</div>
         </div>
-        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 whitespace-nowrap">Pending</span>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 whitespace-nowrap">Pending</span>
       </a>
       {% endfor %}
     {% else %}
-      <div class="py-8 text-center text-sm text-gray-300">✅ No pending listings</div>
+      <div class="py-8 text-center text-sm text-gray-300">&#10003; No pending listings</div>
     {% endif %}
   </div>
 
-  <!-- New Leads -->
+  <!-- New Leads / Contact -->
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
     <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
       <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
         <span class="material-symbols-outlined text-blue-500" style="font-size:16px">person_add</span>
         New Leads
       </h3>
-      <a href="/admin/crm/lead/?status=new" class="text-xs text-indigo-500 font-semibold hover:underline">View all →</a>
+      <a href="/admin/crm/lead/?status=new" class="text-xs text-indigo-500 font-semibold hover:underline">View all &rarr;</a>
     </div>
     {% if new_leads %}
       {% for lead in new_leads %}
       <a href="/admin/crm/lead/{{ lead.id }}/change/"
          class="skx-row flex items-center gap-3 px-5 py-2.5 border-b border-gray-50 dark:border-white/5 no-underline last:border-b-0 hover:bg-gray-50 dark:hover:bg-white/5">
-        <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-lg flex-shrink-0">👤</div>
+        <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-blue-400" style="font-size:16px">person</span>
+        </div>
         <div class="flex-1 min-w-0">
           <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{ lead.name }}</div>
-          <div class="text-xs text-gray-400 truncate">{{ lead.email }}</div>
+          <div class="text-xs text-gray-400 truncate">{% if lead.subject %}{{ lead.subject }}{% else %}{{ lead.email }}{% endif %}</div>
         </div>
-        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">{{ lead.source }}</span>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">{{ lead.source }}</span>
       </a>
       {% endfor %}
     {% else %}
@@ -124,77 +121,711 @@
     {% endif %}
   </div>
 
-  <!-- Tickets + Stats -->
-  <div class="flex flex-col gap-5">
+  <!-- Open Tickets -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-red-500" style="font-size:16px">confirmation_number</span>
+        Open Tickets
+      </h3>
+      <a href="/admin/crm/supportticket/?status=open" class="text-xs text-indigo-500 font-semibold hover:underline">View all &rarr;</a>
+    </div>
+    {% if open_tickets %}
+      {% for t in open_tickets %}
+      <a href="/admin/crm/supportticket/{{ t.id }}/change/"
+         class="skx-row flex items-center gap-3 px-5 py-2.5 border-b border-gray-50 dark:border-white/5 no-underline last:border-b-0 hover:bg-gray-50 dark:hover:bg-white/5">
+        <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-red-400" style="font-size:16px">support_agent</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{{ t.subject }}</div>
+        </div>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap
+          {% if t.priority == 'urgent' %}bg-red-100 text-red-700
+          {% elif t.priority == 'high' %}bg-orange-100 text-orange-700
+          {% else %}bg-gray-100 text-gray-600{% endif %}">{{ t.priority }}</span>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="py-8 text-center text-sm text-gray-300">No open tickets</div>
+    {% endif %}
+  </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
-        <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
-          <span class="material-symbols-outlined text-red-500" style="font-size:16px">confirmation_number</span>
-          Open Tickets
-        </h3>
-        <a href="/admin/crm/supportticket/?status=open" class="text-xs text-indigo-500 font-semibold hover:underline">View all →</a>
+</div>
+
+<!-- Row 3: Blog + Subscribers + Recent Users -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-5">
+
+  <!-- Blog Posts -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-teal-500" style="font-size:16px">article</span>
+        Blog Posts
+      </h3>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-gray-400">{{ blog_published }} published &middot; {{ blog_drafts }} drafts</span>
+        <a href="/admin/blog/blogpost/add/" class="text-xs text-indigo-500 font-semibold hover:underline">+ New &rarr;</a>
       </div>
-      {% if open_tickets %}
-        {% for t in open_tickets %}
-        <a href="/admin/crm/supportticket/{{ t.id }}/change/"
-           class="skx-row flex items-center gap-3 px-5 py-2.5 border-b border-gray-50 dark:border-white/5 no-underline last:border-b-0 hover:bg-gray-50 dark:hover:bg-white/5">
-          <div class="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-lg flex-shrink-0">🎫</div>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{{ t.subject }}</div>
-          </div>
-          <span class="text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap
-            {% if t.priority == 'urgent' %}bg-red-100 text-red-700
-            {% elif t.priority == 'high' %}bg-orange-100 text-orange-700
-            {% else %}bg-gray-100 text-gray-600{% endif %}">
-            {{ t.priority }}
+    </div>
+    {% if recent_blog_posts %}
+      {% for post in recent_blog_posts %}
+      <a href="/admin/blog/blogpost/{{ post.id }}/change/"
+         class="skx-row flex items-center gap-3 px-5 py-2.5 border-b border-gray-50 dark:border-white/5 no-underline last:border-b-0 hover:bg-gray-50 dark:hover:bg-white/5">
+        <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-teal-400" style="font-size:16px">{% if post.status == 'published' %}task_alt{% else %}edit_note{% endif %}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{{ post.title }}</div>
+          <div class="text-xs text-gray-400">{{ post.view_count }} views</div>
+        </div>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap
+          {% if post.status == 'published' %}bg-teal-100 text-teal-700
+          {% elif post.status == 'draft' %}bg-gray-100 text-gray-500
+          {% else %}bg-red-100 text-red-600{% endif %}">{{ post.status }}</span>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="py-8 text-center text-sm text-gray-300">No blog posts yet</div>
+    {% endif %}
+  </div>
+
+  <!-- Newsletter Subscribers -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-violet-500" style="font-size:16px">mark_email_read</span>
+        Recent Subscribers
+      </h3>
+      <a href="/admin/newsletter/subscriber/" class="text-xs text-indigo-500 font-semibold hover:underline">View all &rarr;</a>
+    </div>
+    {% if recent_subscribers %}
+      {% for sub in recent_subscribers %}
+      <div class="skx-row flex items-center gap-3 px-5 py-2.5 border-b border-gray-50 dark:border-white/5 last:border-b-0">
+        <div class="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-violet-400" style="font-size:16px">mail</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{{ sub.email }}</div>
+          <div class="text-xs text-gray-400">{{ sub.source }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="py-8 text-center text-sm text-gray-300">No subscribers yet</div>
+    {% endif %}
+  </div>
+
+  <!-- Recent Users -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-indigo-500" style="font-size:16px">group</span>
+        Recent Users
+      </h3>
+      <a href="/admin/accounts/regularuserproxy/" class="text-xs text-indigo-500 font-semibold hover:underline">View all &rarr;</a>
+    </div>
+    {% if recent_users %}
+      {% for u in recent_users %}
+      <div class="skx-row flex items-center gap-3 px-5 py-2.5 border-b border-gray-50 dark:border-white/5 last:border-b-0">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+          {% if u.role == 'business_owner' %}bg-emerald-50{% else %}bg-indigo-50{% endif %}">
+          <span class="material-symbols-outlined {% if u.role == 'business_owner' %}text-emerald-400{% else %}text-indigo-400{% endif %}" style="font-size:16px">
+            {% if u.role == 'business_owner' %}storefront{% else %}person{% endif %}
           </span>
-        </a>
-        {% endfor %}
-      {% else %}
-        <div class="py-8 text-center text-sm text-gray-300">No open tickets</div>
-      {% endif %}
-    </div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{{ u.email }}</div>
+          <div class="text-xs text-gray-400">{{ u.country }} &middot; {{ u.role }}</div>
+        </div>
+        {% if not u.is_verified %}
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 whitespace-nowrap">Unverified</span>
+        {% else %}
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 whitespace-nowrap">Verified</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="py-8 text-center text-sm text-gray-300">No users yet</div>
+    {% endif %}
+  </div>
 
-    <!-- Platform Stats -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
-        <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
-          <span class="material-symbols-outlined text-violet-500" style="font-size:16px">bar_chart</span>
-          Platform Stats
-        </h3>
-      </div>
-      <div class="grid grid-cols-2 gap-3 p-4">
-        <div class="bg-emerald-50 rounded-xl p-3 text-center">
-          <div class="text-2xl font-black text-emerald-600">{{ total_users }}</div>
-          <div class="text-[11px] text-gray-400 mt-0.5">Total Users</div>
+</div>
+
+<!-- Row 4: Pending Testimonials -->
+<div class="grid grid-cols-1 mb-5">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-cyan-500" style="font-size:16px">rate_review</span>
+        Pending Testimonials
+      </h3>
+      <a href="/admin/core/testimonial/?status=pending" class="text-xs text-indigo-500 font-semibold hover:underline">View all &rarr;</a>
+    </div>
+    {% if pending_testimonials %}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));">
+      {% for t in pending_testimonials %}
+      <a href="/admin/core/testimonial/{{ t.id }}/change/"
+         class="skx-row flex items-start gap-3 px-5 py-3 border-b border-gray-50 dark:border-white/5 no-underline hover:bg-gray-50 dark:hover:bg-white/5">
+        <div class="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <span class="material-symbols-outlined text-cyan-400" style="font-size:16px">format_quote</span>
         </div>
-        <div class="bg-blue-50 rounded-xl p-3 text-center">
-          <div class="text-2xl font-black text-blue-600">{{ total_companies }}</div>
-          <div class="text-[11px] text-gray-400 mt-0.5">Companies</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-semibold text-gray-800 dark:text-gray-100">{{ t.user__email }}</div>
+          <div class="text-xs text-gray-500 mt-0.5 italic truncate">&ldquo;{{ t.body|truncatechars:90 }}&rdquo;</div>
+          <div class="text-[10px] text-gray-400 mt-0.5">{{ t.role }}</div>
+        </div>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 whitespace-nowrap mt-1">Pending</span>
+      </a>
+      {% endfor %}
+      </div>
+    {% else %}
+      <div class="py-8 text-center text-sm text-gray-300">&#10003; No pending testimonials</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══ PAGEVIEW ANALYTICS (Middleware tracking) ════════════════════════ -->
+<div class="mb-2 mt-2">
+  <h2 class="text-base font-extrabold text-gray-800 dark:text-white flex items-center gap-2 m-0 mb-4">
+    <span class="material-symbols-outlined text-violet-500" style="font-size:20px">bar_chart_4_bars</span>
+    Real-Time Page Analytics
+    <span class="text-[11px] font-normal text-gray-400 ml-1">(tracked by middleware — last 30 days)</span>
+  </h2>
+</div>
+
+<!-- PageView KPI row -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 flex items-center gap-4">
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#7c3aedee,#7c3aed99)">
+      <span class="material-symbols-outlined text-white" style="font-size:22px">today</span>
+    </div>
+    <div>
+      <div class="text-2xl font-black text-gray-900 dark:text-white">{{ pv_today }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Views Today</div>
+    </div>
+  </div>
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 flex items-center gap-4">
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#6366f1ee,#6366f199)">
+      <span class="material-symbols-outlined text-white" style="font-size:22px">date_range</span>
+    </div>
+    <div>
+      <div class="text-2xl font-black text-gray-900 dark:text-white">{{ pv_total_7d }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Views Last 7 Days</div>
+    </div>
+  </div>
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 flex items-center gap-4">
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#0ea5e9ee,#0ea5e999)">
+      <span class="material-symbols-outlined text-white" style="font-size:22px">calendar_month</span>
+    </div>
+    <div>
+      <div class="text-2xl font-black text-gray-900 dark:text-white">{{ pv_total_30d }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Views Last 30 Days</div>
+    </div>
+  </div>
+  <!-- Device split -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
+    <div class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-indigo-400" style="font-size:14px">devices</span>
+      Device Split
+    </div>
+    {% for d in pv_by_device %}
+    <div class="flex items-center justify-between mb-1.5">
+      <div class="flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-gray-400" style="font-size:13px">
+          {% if d.device_type == 'desktop' %}computer{% elif d.device_type == 'mobile' %}smartphone{% elif d.device_type == 'tablet' %}tablet{% else %}help{% endif %}
+        </span>
+        <span class="text-[11px] text-gray-600 dark:text-gray-400 capitalize">{{ d.device_type }}</span>
+      </div>
+      <span class="text-[11px] font-bold text-gray-700 dark:text-gray-300">{{ d.count }}</span>
+    </div>
+    {% empty %}<p class="text-xs text-gray-300 text-center py-2">No data yet</p>{% endfor %}
+  </div>
+</div>
+
+<!-- 14-day chart + Top Browsers + Top Countries -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-5">
+
+  <!-- 14-day line chart -->
+  <div class="xl:col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-violet-500" style="font-size:16px">show_chart</span>
+        Daily Pageviews (14d)
+      </h3>
+    </div>
+    <div class="p-4"><canvas id="pvLineChart" height="130"></canvas></div>
+  </div>
+
+  <!-- Top Browsers -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-blue-500" style="font-size:16px">travel_explore</span>
+        Top Browsers
+      </h3>
+    </div>
+    <div class="p-4 space-y-2.5">
+      {% for b in top_browsers %}
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ b.browser }}</span>
+          <span class="text-xs text-gray-400">{{ b.count }} views</span>
+        </div>
+        {% widthratio b.count max_browser 100 as bpct %}
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+          <div class="h-full rounded-full" style="width:{{ bpct }}%;background:linear-gradient(90deg,#6366f1,#818cf8)"></div>
         </div>
       </div>
-      <div class="px-5 pb-4 flex flex-col gap-3">
-        {% for c in kpi %}
+      {% empty %}<p class="text-xs text-gray-300 text-center py-6">No browser data yet — middleware tracking will populate this as users visit the site.</p>{% endfor %}
+    </div>
+  </div>
+
+  <!-- Top Countries (PageView) -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-emerald-500" style="font-size:16px">public</span>
+        Top Countries
+        <span class="text-[10px] font-normal text-gray-400 ml-1">via CF header</span>
+      </h3>
+    </div>
+    <div class="p-4 space-y-2.5">
+      {% for c in pv_by_country %}
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ c.country }}</span>
+          <span class="text-xs text-gray-400">{{ c.count }}</span>
+        </div>
+        {% widthratio c.count max_pv_country 100 as cpct %}
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+          <div class="h-full rounded-full" style="width:{{ cpct }}%;background:linear-gradient(90deg,#10b981,#34d399)"></div>
+        </div>
+      </div>
+      {% empty %}<p class="text-xs text-gray-300 text-center py-6">Country data needs Cloudflare or X-Country header.</p>{% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Top Pages + OS -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
+
+  <!-- Top Pages -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-amber-500" style="font-size:16px">link</span>
+        Most Visited Pages (30d)
+      </h3>
+    </div>
+    <div class="divide-y divide-gray-50 dark:divide-white/5">
+      {% for pg in top_pages %}
+      <div class="flex items-center gap-3 px-5 py-2.5">
+        <span class="text-xs font-bold text-gray-300 w-5 flex-shrink-0 text-right">{{ forloop.counter }}</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate font-mono">{{ pg.path }}</div>
+          {% widthratio pg.count max_page 100 as pgpct %}
+          <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1 mt-1">
+            <div class="h-full rounded-full bg-amber-400" style="width:{{ pgpct }}%"></div>
+          </div>
+        </div>
+        <span class="text-xs font-bold text-amber-600 flex-shrink-0">{{ pg.count }}</span>
+      </div>
+      {% empty %}<div class="py-8 text-center text-sm text-gray-300">No page data yet</div>{% endfor %}
+    </div>
+  </div>
+
+  <!-- OS breakdown -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-pink-500" style="font-size:16px">computer</span>
+        Operating Systems (30d)
+      </h3>
+    </div>
+    <div class="p-5 space-y-3">
+      {% for o in pv_by_os %}
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ o.os }}</span>
+          <span class="text-xs text-gray-400">{{ o.count }}</span>
+        </div>
+        {% if pv_by_os.0.count > 0 %}{% widthratio o.count pv_by_os.0.count 100 as ospct %}{% endif %}
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+          <div class="h-full rounded-full bg-pink-400" style="width:{{ ospct|default:0 }}%"></div>
+        </div>
+      </div>
+      {% empty %}<p class="text-xs text-gray-300 text-center py-6">No OS data yet</p>{% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ TRAFFIC ANALYTICS ═══════════════════════════════════════════════ -->
+<div class="mb-2 mt-2">
+  <h2 class="text-base font-extrabold text-gray-800 dark:text-white flex items-center gap-2 m-0 mb-4">
+    <span class="material-symbols-outlined text-indigo-500" style="font-size:20px">analytics</span>
+    Traffic Analytics
+  </h2>
+</div>
+
+<!-- Traffic KPI row -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 flex items-center gap-4">
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#6366f1ee,#6366f199)">
+      <span class="material-symbols-outlined text-white" style="font-size:22px">visibility</span>
+    </div>
+    <div>
+      <div class="text-2xl font-black text-gray-900 dark:text-white">{{ total_views|default:0 }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Total Platform Views</div>
+    </div>
+  </div>
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 flex items-center gap-4">
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#10b981ee,#10b98199)">
+      <span class="material-symbols-outlined text-white" style="font-size:22px">storefront</span>
+    </div>
+    <div>
+      <div class="text-2xl font-black text-gray-900 dark:text-white">{{ total_listing_views|default:0 }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Listing Page Views</div>
+    </div>
+  </div>
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 flex items-center gap-4">
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#14b8a6ee,#14b8a699)">
+      <span class="material-symbols-outlined text-white" style="font-size:22px">article</span>
+    </div>
+    <div>
+      <div class="text-2xl font-black text-gray-900 dark:text-white">{{ total_blog_views|default:0 }}</div>
+      <div class="text-xs text-gray-400 mt-0.5">Blog Article Views</div>
+    </div>
+  </div>
+</div>
+
+<!-- Traffic main row -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-5">
+
+  <!-- Top Listings by Views -->
+  <div class="xl:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-indigo-500" style="font-size:16px">leaderboard</span>
+        Top Listings by Views
+      </h3>
+      <a href="/admin/directory/listing/" class="text-xs text-indigo-500 font-semibold hover:underline">View all &rarr;</a>
+    </div>
+    <div class="p-4 space-y-2.5">
+      {% for item in top_listings %}
+      <a href="/admin/directory/listing/{{ item.id }}/change/" class="flex items-center gap-3 group no-underline">
+        <span class="text-xs font-bold text-gray-300 w-5 text-right flex-shrink-0">{{ forloop.counter }}</span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate group-hover:text-indigo-600 transition-colors">{{ item.title }}</span>
+            <span class="text-xs font-bold text-gray-600 dark:text-gray-300 ml-2 flex-shrink-0">{{ item.view_count }} views</span>
+          </div>
+          <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+            {% widthratio item.view_count max_listing_views 100 as pct %}
+            <div class="h-full rounded-full transition-all" style="width:{{ pct }}%;background:linear-gradient(90deg,#6366f1,#8b5cf6)"></div>
+          </div>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span class="text-[10px] text-gray-400">{{ item.category__name }}</span>
+            <span class="text-[10px] text-gray-300">&middot;</span>
+            <span class="text-[10px] text-gray-400">{{ item.country }}</span>
+          </div>
+        </div>
+      </a>
+      {% empty %}
+        <p class="text-sm text-gray-300 text-center py-6">No listing views yet</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Views by Country -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-emerald-500" style="font-size:16px">public</span>
+        Top Countries
+      </h3>
+    </div>
+    <div class="p-4 space-y-3">
+      {% for row in views_by_country %}
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ row.country }}</span>
+          <span class="text-xs text-gray-400">{{ row.views }} views &middot; {{ row.listings }} listings</span>
+        </div>
+        {% if views_by_country.0.views > 0 %}
+          {% widthratio row.views views_by_country.0.views 100 as cpct %}
+        {% else %}
+          {% with cpct=0 %}{% endwith %}
+        {% endif %}
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+          <div class="h-full rounded-full" style="width:{{ cpct|default:0 }}%;background:linear-gradient(90deg,#10b981,#34d399)"></div>
+        </div>
+      </div>
+      {% empty %}
+        <p class="text-sm text-gray-300 text-center py-6">No data yet</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Traffic row 2: Blog + Category breakdown -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
+
+  <!-- Top Blog Posts -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-teal-500" style="font-size:16px">trending_up</span>
+        Top Blog Posts
+      </h3>
+      <a href="/admin/blog/blogpost/" class="text-xs text-indigo-500 font-semibold hover:underline">View all &rarr;</a>
+    </div>
+    <div class="divide-y divide-gray-50 dark:divide-white/5">
+      {% for post in top_blog_posts %}
+      <a href="/admin/blog/blogpost/{{ post.id }}/change/" class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/5 no-underline group">
+        <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-teal-500" style="font-size:15px">article</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate group-hover:text-indigo-600 transition-colors">{{ post.title }}</div>
+        </div>
+        <div class="flex items-center gap-1 text-xs font-bold text-teal-600 flex-shrink-0">
+          <span class="material-symbols-outlined" style="font-size:13px">visibility</span>
+          {{ post.view_count }}
+        </div>
+      </a>
+      {% empty %}
+        <div class="py-8 text-center text-sm text-gray-300">No blog views yet</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Views by Category -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+        <span class="material-symbols-outlined text-violet-500" style="font-size:16px">category</span>
+        Views by Category
+      </h3>
+    </div>
+    <div class="p-4 space-y-3">
+      {% for row in views_by_category %}
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate">{{ row.category__name }}</span>
+          <span class="text-xs text-gray-400 ml-2 flex-shrink-0">{{ row.views }} views &middot; {{ row.listings }} listings</span>
+        </div>
+        {% if views_by_category.0.views > 0 %}
+          {% widthratio row.views views_by_category.0.views 100 as catpct %}
+        {% endif %}
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+          <div class="h-full rounded-full" style="width:{{ catpct|default:0 }}%;background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></div>
+        </div>
+      </div>
+      {% empty %}
+        <p class="text-sm text-gray-300 text-center py-6">No data yet</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ SEO ANALYTICS ════════════════════════════════════════════════ -->
+<div class="mb-2 mt-6">
+  <h2 class="text-base font-extrabold text-gray-800 dark:text-white flex items-center gap-2 m-0 mb-4">
+    <span class="material-symbols-outlined text-emerald-500" style="font-size:20px">travel_explore</span>
+    SEO Analytics
+  </h2>
+</div>
+
+<!-- SEO Score + Summary -->
+<div style="display:grid;grid-template-columns:280px 1fr;gap:18px;margin-bottom:18px;">
+
+  <!-- Score ring -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 flex flex-col items-center justify-center text-center">
+    <div class="relative mb-3" style="width:110px;height:110px;">
+      <svg viewBox="0 0 110 110" style="transform:rotate(-90deg);width:110px;height:110px;">
+        <circle cx="55" cy="55" r="46" fill="none" stroke="#f3f4f6" stroke-width="10"/>
+        <circle cx="55" cy="55" r="46" fill="none"
+          stroke="{% if seo_score >= 70 %}#10b981{% elif seo_score >= 40 %}#f59e0b{% else %}#ef4444{% endif %}"
+          stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="{{ seo_score|default:0 }} 100"
+          style="transition:stroke-dasharray .6s ease;"/>
+      </svg>
+      <div class="absolute inset-0 flex flex-col items-center justify-center" style="transform:none;">
+        <span class="text-2xl font-black {% if seo_score >= 70 %}text-emerald-600{% elif seo_score >= 40 %}text-amber-500{% else %}text-red-500{% endif %}">{{ seo_score }}%</span>
+        <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">SEO Score</span>
+      </div>
+    </div>
+    <p class="text-xs text-gray-500 leading-relaxed m-0">
+      Based on meta title, description &amp; OG image coverage across published listings.
+    </p>
+  </div>
+
+  <!-- SEO breakdown cards -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+    <!-- Listings -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-indigo-500" style="font-size:16px">storefront</span>
+        <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Listings SEO</span>
+      </div>
+      <div class="space-y-2">
         <div>
-          <div class="flex justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">
-            <span>{{ c.title }}</span><span>{{ c.value }}</span>
+          <div class="flex justify-between mb-1">
+            <span class="text-[11px] text-gray-500">Meta Title</span>
+            <span class="text-[11px] font-bold {% if seo_with_title == total_published %}text-emerald-600{% else %}text-amber-600{% endif %}">{{ seo_with_title }}/{{ total_published }}</span>
           </div>
-          <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div class="prog-fill rounded-full" data-val="{{ c.value }}" style="background:{{ c.bg }}"></div>
+          <div class="w-full bg-gray-100 rounded-full h-1.5">
+            {% if total_published > 0 %}{% widthratio seo_with_title total_published 100 as tp %}{% endif %}
+            <div class="h-full rounded-full bg-indigo-500" style="width:{{ tp|default:0 }}%"></div>
           </div>
         </div>
-        {% endfor %}
+        <div>
+          <div class="flex justify-between mb-1">
+            <span class="text-[11px] text-gray-500">Meta Desc</span>
+            <span class="text-[11px] font-bold {% if seo_with_desc == total_published %}text-emerald-600{% else %}text-amber-600{% endif %}">{{ seo_with_desc }}/{{ total_published }}</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-1.5">
+            {% if total_published > 0 %}{% widthratio seo_with_desc total_published 100 as dp %}{% endif %}
+            <div class="h-full rounded-full bg-violet-500" style="width:{{ dp|default:0 }}%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <span class="text-[11px] text-gray-500">OG Image</span>
+            <span class="text-[11px] font-bold {% if seo_with_og == total_published %}text-emerald-600{% else %}text-red-500{% endif %}">{{ seo_with_og }}/{{ total_published }}</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-1.5">
+            {% if total_published > 0 %}{% widthratio seo_with_og total_published 100 as op %}{% endif %}
+            <div class="h-full rounded-full bg-pink-500" style="width:{{ op|default:0 }}%"></div>
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- Blog SEO -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-teal-500" style="font-size:16px">article</span>
+        <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Blog SEO</span>
+      </div>
+      <div class="space-y-2">
+        <div>
+          <div class="flex justify-between mb-1">
+            <span class="text-[11px] text-gray-500">Meta Title</span>
+            <span class="text-[11px] font-bold {% if blog_seo_title == blog_total %}text-emerald-600{% else %}text-amber-600{% endif %}">{{ blog_seo_title }}/{{ blog_total }}</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-1.5">
+            {% if blog_total > 0 %}{% widthratio blog_seo_title blog_total 100 as btp %}{% endif %}
+            <div class="h-full rounded-full bg-teal-500" style="width:{{ btp|default:0 }}%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <span class="text-[11px] text-gray-500">Meta Desc</span>
+            <span class="text-[11px] font-bold {% if blog_seo_desc == blog_total %}text-emerald-600{% else %}text-amber-600{% endif %}">{{ blog_seo_desc }}/{{ blog_total }}</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-1.5">
+            {% if blog_total > 0 %}{% widthratio blog_seo_desc blog_total 100 as bdp %}{% endif %}
+            <div class="h-full rounded-full bg-cyan-500" style="width:{{ bdp|default:0 }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Issues summary -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-red-500" style="font-size:16px">warning</span>
+        <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Issues</span>
+      </div>
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] text-gray-500">Missing Meta Title</span>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full {% if seo_missing_title == 0 %}bg-emerald-100 text-emerald-700{% else %}bg-red-100 text-red-600{% endif %}">{{ seo_missing_title }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] text-gray-500">Missing Meta Desc</span>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full {% if seo_missing_desc == 0 %}bg-emerald-100 text-emerald-700{% else %}bg-red-100 text-red-600{% endif %}">{{ seo_missing_desc }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] text-gray-500">Missing OG Image</span>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full {% if seo_missing_og == 0 %}bg-emerald-100 text-emerald-700{% else %}bg-orange-100 text-orange-600{% endif %}">{{ seo_missing_og }}</span>
+        </div>
+        {% if seo_score >= 70 %}
+        <div class="mt-3 bg-emerald-50 rounded-xl px-3 py-2 text-[11px] text-emerald-700 font-medium">
+          ✓ SEO is in good shape!
+        </div>
+        {% elif seo_score >= 40 %}
+        <div class="mt-3 bg-amber-50 rounded-xl px-3 py-2 text-[11px] text-amber-700 font-medium">
+          ⚠ Needs improvement
+        </div>
+        {% else %}
+        <div class="mt-3 bg-red-50 rounded-xl px-3 py-2 text-[11px] text-red-700 font-medium">
+          ✗ Critical — needs attention
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEO Issues table -->
+{% if seo_issues %}
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden mb-5">
+  <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/10">
+    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 m-0">
+      <span class="material-symbols-outlined text-red-500" style="font-size:16px">search_off</span>
+      Listings Missing SEO Data
+      <span class="ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">{{ seo_missing_title }} issues</span>
+    </h3>
+    <a href="/admin/directory/listing/" class="text-xs text-indigo-500 font-semibold hover:underline">Fix all &rarr;</a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));">
+    {% for item in seo_issues %}
+    <a href="/admin/directory/listing/{{ item.id }}/change/"
+       class="flex items-center gap-3 px-5 py-3 border-b border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 no-underline group">
+      <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+        <span class="material-symbols-outlined text-red-400" style="font-size:15px">search_off</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate group-hover:text-indigo-600 transition-colors">{{ item.title }}</div>
+        <div class="text-[10px] text-gray-400">{{ item.category__name }} &middot; {{ item.view_count }} views</div>
+      </div>
+      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600 whitespace-nowrap">No SEO</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Platform Stats Bar -->
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 mb-5">
+  <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-1.5 m-0">
+    <span class="material-symbols-outlined text-violet-500" style="font-size:16px">bar_chart</span>
+    Platform Overview
+  </h3>
+  <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-4">
+    {% for c in kpi %}
+    <div class="text-center">
+      <div class="text-xl font-black" style="color:{{ c.bg }}">{{ c.value }}</div>
+      <div class="text-[11px] text-gray-400 mt-0.5 leading-tight">{{ c.title }}</div>
+      <div class="h-1 rounded-full mt-2 bg-gray-100 overflow-hidden">
+        <div class="prog-fill h-full rounded-full" data-val="{{ c.value }}" style="background:{{ c.bg }}"></div>
+      </div>
+    </div>
+    {% endfor %}
   </div>
 </div>
 
 <!-- Footer -->
-<div class="mt-8 pt-5 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
-  <p class="text-xs text-gray-400 m-0">© 2026 <span class="font-bold text-indigo-500">SankofaX</span> — Global Black &amp; African Business Directory</p>
-  <p class="text-xs text-gray-400 m-0">Admin Dashboard v1.0</p>
+<div class="mt-6 pt-5 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+  <p class="text-xs text-gray-400 m-0">&copy; 2026 <span class="font-bold text-indigo-500">SankofaX</span> &mdash; Global Black &amp; African Business Directory</p>
+  <p class="text-xs text-gray-400 m-0">Admin Dashboard v2.0</p>
 </div>
 
 <script id="skx-chart-data" type="application/json">
@@ -206,6 +837,48 @@
   "statusCounts": {{ status_counts|safe }}
 }
 </script>
+<script id="skx-pv-data" type="application/json">
+{
+  "labels": {{ pv_chart_labels|safe }},
+  "data": {{ pv_chart_data|safe }}
+}
+</script>
 <script src="{% static 'vendor/chart.umd.min.js' %}"></script>
 <script src="{% static 'admin/js/dashboard.js' %}"></script>
+<script>
+(function() {
+  try {
+    var pvRaw  = JSON.parse(document.getElementById('skx-pv-data').textContent);
+    var isDark = document.documentElement.classList.contains('dark');
+    var gridC  = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+    var textC  = isDark ? '#9ca3af' : '#6b7280';
+
+    new Chart(document.getElementById('pvLineChart'), {
+      type: 'line',
+      data: {
+        labels: pvRaw.labels,
+        datasets: [{
+          label: 'Page Views',
+          data: pvRaw.data,
+          borderColor: '#7c3aed',
+          backgroundColor: 'rgba(124,58,237,0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          pointRadius: 3,
+          pointBackgroundColor: '#7c3aed',
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: gridC }, ticks: { color: textC, font: { size: 9 }, maxTicksLimit: 7 } },
+          y: { grid: { color: gridC }, ticks: { color: textC, font: { size: 9 }, precision: 0 }, beginAtZero: true }
+        }
+      }
+    });
+  } catch(e) {}
+})();
+</script>
 {% endblock %}

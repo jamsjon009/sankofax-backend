@@ -1,0 +1,81 @@
+{% load unfold_list i18n %}
+
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #e5e0d8;border-radius:0 0 10px 10px;padding:10px 16px;margin-top:-1px;">
+
+  {# Left: record info #}
+  <div style="font-size:12px;color:#9a8f82;font-variant-numeric:tabular-nums;white-space:nowrap;">
+    {% if pagination_required %}
+      {% translate 'Page' %}
+      <strong style="color:#1c1a17;font-weight:600;">{{ cl.page_num }}</strong>
+      {% translate 'of' %}
+      <strong style="color:#1c1a17;font-weight:600;">{{ cl.paginator.num_pages }}</strong>
+      <span style="margin:0 6px;color:#d4cfc8;">&middot;</span>
+    {% endif %}
+    <strong style="color:#1c1a17;font-weight:600;">{{ cl.result_count }}</strong>
+    {% if cl.result_count == 1 %}{{ cl.opts.verbose_name }}{% else %}{{ cl.opts.verbose_name_plural }}{% endif %}
+    {% if show_all_url %}
+      <span style="margin:0 6px;color:#d4cfc8;">&middot;</span>
+      <a href="{{ show_all_url }}" style="color:#b5813b;text-decoration:none;font-weight:500;">{% translate 'Show all' %}</a>
+    {% endif %}
+  </div>
+
+  {% if pagination_required %}
+  {# Right: pagination controls #}
+  <div style="display:flex;align-items:center;gap:3px;">
+
+    {# Prev arrow #}
+    {% if cl.page_num > 1 %}
+      <a href="?{% if cl.params %}{{ cl.params }}&{% endif %}p={{ cl.page_num|add:"-1" }}"
+         style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;border:1px solid #e5e0d8;background:#fff;color:#6b6460;text-decoration:none;transition:all 0.15s;"
+         onmouseover="this.style.background='#b5813b';this.style.borderColor='#b5813b';this.style.color='#fff';"
+         onmouseout="this.style.background='#fff';this.style.borderColor='#e5e0d8';this.style.color='#6b6460';"
+         title="{% translate 'Previous page' %}">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+    {% else %}
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;border:1px solid #ede9e3;background:#f9f7f4;color:#d4cfc8;cursor:not-allowed;">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </span>
+    {% endif %}
+
+    {# Page numbers #}
+    {% for i in page_range %}
+      <div style="line-height:1;">{% paginator_number cl i %}</div>
+    {% endfor %}
+
+    {# Next arrow #}
+    {% if cl.page_num < cl.paginator.num_pages %}
+      <a href="?{% if cl.params %}{{ cl.params }}&{% endif %}p={{ cl.page_num|add:"1" }}"
+         style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;border:1px solid #e5e0d8;background:#fff;color:#6b6460;text-decoration:none;transition:all 0.15s;"
+         onmouseover="this.style.background='#b5813b';this.style.borderColor='#b5813b';this.style.color='#fff';"
+         onmouseout="this.style.background='#fff';this.style.borderColor='#e5e0d8';this.style.color='#6b6460';"
+         title="{% translate 'Next page' %}">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+    {% else %}
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;border:1px solid #ede9e3;background:#f9f7f4;color:#d4cfc8;cursor:not-allowed;">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </span>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+  {% if cl.formset and cl.result_count %}
+    <div>
+      <button type="submit" name="_save"
+              style="background:#1c1a17;color:#fff;font-weight:600;font-size:12px;padding:5px 16px;border-radius:7px;border:none;cursor:pointer;">
+        {% translate 'Save' %}
+      </button>
+    </div>
+  {% endif %}
+
+</div>

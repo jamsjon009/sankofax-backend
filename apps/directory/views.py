@@ -1,4 +1,4 @@
-from django.utils import timezone
+﻿from django.utils import timezone
 from rest_framework import viewsets, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -9,10 +9,12 @@ from .serializers import (
     ListingCardSerializer, ListingDetailSerializer, ListingCreateUpdateSerializer,
 )
 from .filters import ListingFilter
+from apps.accounts.permissions import IsBusinessOwner
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.filter(parent=None).prefetch_related('subcategories')
+    pagination_class = None  # plain array
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'slug'
@@ -22,6 +24,7 @@ class AmenityViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Amenity.objects.all()
     serializer_class = AmenitySerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None  # plain array
     lookup_field = 'slug'
 
 
@@ -44,10 +47,12 @@ class ListingViewSet(viewsets.ModelViewSet):
         return ListingDetailSerializer
 
     def get_permissions(self):
+        # Creating a listing is a business-owner action; edits/deletes are
+        # further scoped to the owner's own listings in get_queryset().
         if self.action in ['create']:
-            return [permissions.IsAuthenticated()]
+            return [IsBusinessOwner()]
         if self.action in ['update', 'partial_update', 'destroy']:
-            return [permissions.IsAuthenticated()]
+            return [IsBusinessOwner()]
         return [permissions.AllowAny()]
 
     def get_queryset(self):
@@ -66,6 +71,21 @@ class ListingViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         Listing.objects.filter(pk=instance.pk).update(view_count=instance.view_count + 1)
         serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def saved(self, request):
+        """GET /api/listings/saved/ — the current user's saved (bookmarked) listings."""
+        from apps.profiles.models import UserProfile
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        qs = (profile.saved_listings
+              .filter(listing_status=Listing.Status.PUBLISHED)
+              .select_related('category', 'company')
+              .prefetch_related('gallery_images', 'amenities'))
+        page = self.paginate_queryset(qs)
+        serializer = ListingCardSerializer(page if page is not None else qs, many=True, context={'request': request})
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])

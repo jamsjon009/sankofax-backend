@@ -4,8 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from apps.directory.models import Listing
 from apps.directory.serializers import ListingDetailSerializer
-from .models import Lead, SupportTicket
-from .serializers import LeadSerializer, SupportTicketSerializer
+from .models import Lead, LeadNote, SupportTicket
+from .serializers import LeadSerializer, LeadNoteSerializer, SupportTicketSerializer
 
 
 class IsStaffOrAdmin(permissions.BasePermission):
@@ -19,6 +19,24 @@ class LeadViewSet(viewsets.ModelViewSet):
     permission_classes = [IsStaffOrAdmin]
     search_fields = ['name', 'email']
     filterset_fields = ['status', 'source', 'assigned_to']
+
+    @action(detail=True, methods=['post'], url_path='notes')
+    def add_note(self, request, pk=None):
+        lead = self.get_object()
+        serializer = LeadNoteSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(lead=lead)
+        return Response(serializer.data, status=201)
+
+    @action(detail=True, methods=['patch'], url_path='status')
+    def update_status(self, request, pk=None):
+        lead = self.get_object()
+        new_status = request.data.get('status')
+        if new_status not in dict(Lead.Status.choices):
+            return Response({'detail': 'Invalid status.'}, status=400)
+        lead.status = new_status
+        lead.save(update_fields=['status'])
+        return Response({'status': lead.status})
 
 
 class SupportTicketViewSet(viewsets.ModelViewSet):
@@ -48,8 +66,13 @@ class PendingListingsViewSet(viewsets.ViewSet):
     permission_classes = [IsStaffOrAdmin]
 
     def list(self, request):
+        from rest_framework.pagination import PageNumberPagination
         qs = Listing.objects.filter(listing_status=Listing.Status.PENDING).select_related('company', 'category')
-        return Response(ListingDetailSerializer(qs, many=True, context={'request': request}).data)
+        paginator = PageNumberPagination()
+        paginator.page_size = 12
+        page = paginator.paginate_queryset(qs, request)
+        serializer = ListingDetailSerializer(page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['post'], url_path='approve')
     def approve(self, request, pk=None):
