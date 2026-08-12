@@ -6,36 +6,33 @@ Django 5 + Django REST Framework backend for the SankofaX Global Black & African
 
 - **Python** 3.12
 - **Django** 5.0.6 + **Django REST Framework** 3.15
-- **PostgreSQL** 16 (database)
+- **PostgreSQL** (database, via `DATABASE_URL`)
 - **JWT Auth** via djangorestframework-simplejwt
-- **django-unfold** — modern CRM admin dashboard
+- **django-unfold** — modern admin dashboard
 - **Stripe** — subscription payments
 - **Gunicorn** + **WhiteNoise** — production serving
 
 ## Project Structure
 
 ```
-backend/
+sankofax-backend/
 ├── apps/
-│   ├── accounts/       # Custom User model (email login, UUID PK, role/region)
-│   ├── profiles/       # UserProfile + CompanyProfile
-│   ├── directory/      # Listings, Categories, Amenities
+│   ├── accounts/       # Custom User model (email login, UUID PK, role/region), JWT, email verify, password reset
+│   ├── profiles/       # UserProfile, CompanyProfile, IdentityBadge (ownership badges)
+│   ├── directory/      # Listings, Categories, Amenities, listing images
 │   ├── reviews/        # Reviews & owner replies
-│   ├── subscriptions/  # Plans + Stripe checkout/webhook/portal
+│   ├── subscriptions/  # Plans (Global North/South) + Stripe checkout/webhook/portal
 │   ├── events/         # Community events
 │   ├── marketplace/    # Products
-│   ├── crm/            # Leads + Support tickets
+│   ├── crm/            # Leads, support tickets, listing approval workflow
 │   ├── newsletter/     # Subscribers + CSV export
-│   └── core/           # Admin dashboard, seed data
+│   ├── blog/           # Blog posts & categories
+│   └── core/           # Site settings, pages, FAQs, testimonials, analytics, seed commands
 ├── config/
-│   ├── settings/
-│   │   ├── base.py
-│   │   ├── dev.py
-│   │   └── prod.py
-│   └── urls.py
-├── templates/
-│   └── admin/index.html  # Custom unfold dashboard
-├── .env.example
+│   ├── settings/       # base.py, dev.py, prod.py
+│   ├── urls.py
+│   └── wsgi.py
+├── templates/admin/    # Custom unfold dashboard
 ├── requirements.txt
 ├── Dockerfile
 └── nginx.conf
@@ -45,21 +42,21 @@ backend/
 
 ### Prerequisites
 - Python 3.12+
-- PostgreSQL 16 running locally
+- PostgreSQL running locally
 
-### 1. Clone the repo
+### 1. Clone
 ```bash
-git clone https://github.com/YOUR_ORG/sankofax-backend.git
+git clone https://github.com/jamsjon009/sankofax-backend.git
 cd sankofax-backend
 ```
 
-### 2. Create virtual environment
+### 2. Virtual environment
 ```bash
 python -m venv venv
-
-# Windows
+# Windows (PowerShell / CMD)
 venv\Scripts\activate
-
+# Windows (Git Bash / MINGW64) — use forward slashes
+source venv/Scripts/activate
 # Mac / Linux
 source venv/bin/activate
 ```
@@ -69,11 +66,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Set up environment variables
-```bash
-cp .env.example .env
-```
-Edit `.env` and fill in your values (at minimum `DATABASE_URL`):
+### 4. Environment variables
+Create a `.env` file in the project root:
 ```env
 DEBUG=True
 SECRET_KEY=your-secret-key-change-this
@@ -96,11 +90,43 @@ CREATE DATABASE sankofax;
 python manage.py migrate
 ```
 
-### 7. Load seed data (demo content)
+### 7. Load data
+
+**Quickest — one command loads everything** (runs a–d below in order, all idempotent):
+
 ```bash
-python manage.py seed_data
+python manage.py seed_all
+# offline (skip the network image/geocode steps):
+python manage.py seed_all --skip-images --skip-geocode
+# also replace existing placeholder images with topical ones:
+python manage.py seed_all --force-images
 ```
-This creates 10 categories, ~30 listings, 6 subscription plans, and sample users.
+
+Or run the individual steps yourself. All are **idempotent** — safe to re-run; existing
+rows are skipped or updated in place.
+
+```bash
+# a) Demo data — users, categories, companies, listings, plans, reviews, badges,
+#    blog posts, testimonials, pages, FAQs, events, marketplace, promotions, etc.
+python manage.py seed_demo
+
+# b) The 15 real businesses from Content/Company Descriptions_2025 (item #21)
+python manage.py seed_real_businesses
+
+# c) Real, topical photos for listings/categories/companies/blogs (item images)
+python manage.py seed_real_images            # fill where an image is missing
+#   or, to also replace existing placeholder (random) images with topical ones:
+python manage.py seed_real_images --force
+
+# d) Map coordinates from addresses (item #20). Needed after real addresses are added.
+python manage.py geocode_locations
+```
+
+> The confirmed regional pricing (Directory Basic/Pro/Elite — North $15/$29/$49,
+> South $7.50/$14.50/$24.50) and the editable homepage copy + real FAQs are loaded
+> automatically by data migrations in step 6, so no extra command is needed for those.
+
+See **[Management Commands](#management-commands)** below for the full list and options.
 
 ### 8. Create a superuser
 ```bash
@@ -114,46 +140,142 @@ python manage.py runserver
 
 | URL | Description |
 |-----|-------------|
-| `http://localhost:8000/admin/` | CRM Admin (django-unfold) |
-| `http://localhost:8000/api/docs/` | Swagger API docs |
-| `http://localhost:8000/api/v1/` | REST API root |
+| `http://localhost:8000/admin/` | Admin dashboard (django-unfold) |
+| `http://localhost:8000/api/docs/` | Swagger API docs (interactive, always current) |
+| `http://localhost:8000/api/schema/` | OpenAPI schema |
+
+---
+
+## Understanding the API (REST conventions)
+
+The API is REST-style, so **the same URL can serve different actions depending on the
+HTTP method** — this is normal and intended, not a duplicate route. For example:
+
+| URL | `GET` | `POST` |
+|-----|-------|--------|
+| `/api/listings/` | List published listings | Create a new listing (auth) |
+| `/api/companies/` | List your companies (auth) | Create a company (auth) |
+
+And a single-item URL varies by method too:
+
+| URL | `GET` | `PATCH` | `DELETE` |
+|-----|-------|---------|----------|
+| `/api/listings/{slug}/` | Get one listing | Update it (owner) | Delete it (owner) |
+
+So when you see one endpoint listed for both "get" and "create", it is **one URL with two
+methods** — the method (`GET` vs `POST`) decides what happens. The Swagger page at
+`/api/docs/` lists every URL broken down by method, and is the authoritative reference.
+
+All endpoints are served under the `/api/` prefix (there is **no** `/api/v1/`).
 
 ---
 
 ## API Overview
 
-| Endpoint | Description |
-|---|---|
-| `POST /api/v1/auth/register/` | Register new user |
-| `POST /api/v1/auth/token/` | Login — returns JWT |
-| `POST /api/v1/auth/token/refresh/` | Refresh access token |
-| `GET /api/v1/listings/` | List published listings |
-| `GET /api/v1/listings/?my=true` | Owner's own listings |
-| `GET /api/v1/categories/` | All categories |
-| `GET /api/v1/plans/` | Subscription plans |
-| `POST /api/v1/subscriptions/checkout/` | Create Stripe checkout session |
-| `POST /api/v1/subscriptions/portal/` | Open Stripe billing portal |
-| `GET /api/v1/events/` | Published events |
-| `GET /api/v1/marketplace/` | Active products |
+Representative endpoints (see `/api/docs/` for the complete, live list):
 
-Full docs: `http://localhost:8000/api/docs/`
+### Auth — `/api/auth/`
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/register/` | Register a new user |
+| POST | `/api/auth/login/` | Login — returns JWT `access` + `refresh` |
+| POST | `/api/auth/refresh/` | Refresh the access token |
+| POST | `/api/auth/logout/` | Blacklist the refresh token |
+| GET | `/api/auth/me/` | Current user |
+| POST | `/api/auth/verify-email/` · `resend-verification/` · `forgot-password/` · `reset-password/` | Email & password flows |
+
+### Directory & reviews — `/api/`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET / POST | `/api/listings/` | List published listings / create one |
+| GET | `/api/listings/?my=true` | The current owner's listings |
+| GET / PATCH / DELETE | `/api/listings/{slug}/` | Retrieve / update / delete a listing |
+| POST | `/api/listings/{id}/images/` | Upload a gallery image |
+| GET / POST | `/api/listings/{slug}/reviews/` | List / create reviews |
+| PATCH | `/api/reviews/{id}/reply/` | Owner replies to a review |
+| GET | `/api/categories/` · `/api/categories/{slug}/` | Categories |
+| GET | `/api/amenities/` | Amenities |
+
+### Profiles & badges — `/api/`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET / PATCH | `/api/profile/` | Current user's profile |
+| GET | `/api/badges/` | Ownership / identity badges |
+| GET / POST | `/api/companies/` | List your companies / create one |
+| GET / PATCH | `/api/companies/{slug}/` | Retrieve / update a company |
+
+### Subscriptions — `/api/`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/plans/` | Subscription plans (region-aware) |
+| POST | `/api/subscriptions/checkout/` | Create a Stripe checkout session |
+| POST | `/api/subscriptions/portal/` | Open the Stripe billing portal |
+| POST | `/api/webhooks/stripe/` | Stripe webhook receiver |
+
+### Content — `/api/`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/events/` | Published events |
+| GET | `/api/blog/` · `/api/blog/{slug}/` · `/api/blog/categories/` | Blog |
+| GET | `/api/faqs/` · `/api/site-settings/` · `/api/pages/{slug}/` · `/api/testimonials/` | Site content |
+| POST | `/api/contact/` · `/api/newsletter/subscribe/` | Contact form / newsletter |
+| GET | `/api/admin/stats/` | Admin dashboard statistics (staff only) |
+
+Full, always-current docs: `http://localhost:8000/api/docs/`
 
 ---
 
-## Running with Docker
+## Management Commands
+
+All custom commands live under each app's `management/commands/`. Run with
+`python manage.py <command>`. Every command is idempotent unless noted.
+
+### Data & seeding
+| Command | What it does |
+|---|---|
+| `seed_all` | **One command to load all demo data** — runs `seed_demo` → `seed_real_businesses` → `seed_real_images` → `geocode_locations` in order. Options: `--force-images`, `--skip-images`, `--skip-geocode`. |
+| `seed_demo` | Full demo dataset (users, categories, companies, listings, plans, reviews, badges, blog, testimonials, pages, FAQs, events, marketplace, promotions). |
+| `seed_real_businesses` | Seeds the 15 real businesses from `Content/Company Descriptions_2025` (item #21) — a `CompanyProfile` + published `Listing` each, owned by the `partners@sankofax.com` curator account until claimed. |
+| `seed_real_images` | Fills real, topical photos (loremflickr, picsum fallback) for listings, categories, companies and blog posts. `--force` also replaces existing placeholder images. Options: `--force`, `--sleep <s>`. |
+| `geocode_locations` | Fills latitude/longitude from addresses for listings & events (item #20). Options: `--force`, `--listings`, `--events`, `--limit <n>`, `--sleep <s>`. |
+| `seed_data` / `seed_blog_data` | Older / blog-only seed helpers (superseded by `seed_demo`). |
+
+### Periodic (run on a schedule — cron / Celery beat)
+| Command | What it does |
+|---|---|
+| `expire_verifications` | Downgrades companies whose verification tier has expired (item #12). |
+| `expire_featured_stories` | Un-features promoted stories whose paid feature window has ended (item #18). |
+
+### Standard Django
+| Command | What it does |
+|---|---|
+| `migrate` | Apply DB migrations (also seeds confirmed pricing, homepage copy, legal pages & real FAQs via data migrations). |
+| `createsuperuser` | Create an admin login. |
+| `collectstatic --no-input` | Gather static files for production. |
+| `test` | Run the test suite. |
+| `runserver` | Start the dev server. |
+
+**Recommended first-run order:** `migrate` → `seed_all` → `createsuperuser`
+(or run the seeders individually: `seed_demo` → `seed_real_businesses` → `seed_real_images` → `geocode_locations`).
+
+---
+
+## Docker
+
+A `Dockerfile` is provided for building the backend image. PostgreSQL is expected to run
+separately (managed DB or a local instance); point `DATABASE_URL` at it.
 
 ```bash
-docker compose up --build
+docker build -t sankofax-backend .
+docker run --env-file .env -p 8000:8000 sankofax-backend
 ```
-
-This starts PostgreSQL + Django together. Backend available at `http://localhost:8000`.
 
 ---
 
 ## Production Deployment
 
 ### Environment
-Set `DJANGO_SETTINGS_MODULE=config.settings.prod` and fill all env vars from `.env.example`.
+Set `DJANGO_SETTINGS_MODULE=config.settings.prod` and provide all env vars listed in Quick Start.
 
 ### Gunicorn
 ```bash
@@ -165,18 +287,22 @@ gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120
 python manage.py collectstatic --no-input
 ```
 
-See `nginx.conf` for the Nginx reverse proxy configuration.
+See `nginx.conf` for the Nginx reverse-proxy configuration.
 
 ---
 
-## Branch Strategy
+## Branches
 
 | Branch | Purpose |
 |---|---|
-| `main` | Source of truth |
-| `production` | Live release |
-| `staging` | Pre-release QA |
-| `development` | Integration branch |
-| `backend` | Active development work |
+| `main` | Source of truth / pull-request target |
+| `development` | Active development branch |
 
-Workflow: `backend` → `development` → `staging` → `production` → `main`
+Day-to-day work happens on `development`; changes are merged into `main` via pull request.
+
+---
+
+## Related
+
+- **Frontend:** `sankofax-frontend` (Next.js) — consumes this API.
+- **Roadmap / progress:** see `PROGRESS.md` for what's built and what's remaining.

@@ -1,4 +1,4 @@
-from rest_framework import serializers
+﻿from rest_framework import serializers
 from .models import Lead, LeadNote, SupportTicket
 
 
@@ -20,7 +20,7 @@ class LeadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lead
-        fields = ['id', 'name', 'email', 'phone', 'source', 'status', 'assigned_to', 'notes', 'created_at']
+        fields = ['id', 'name', 'email', 'phone', 'subject', 'message', 'source', 'status', 'assigned_to', 'notes', 'created_at']
 
 
 class SupportTicketSerializer(serializers.ModelSerializer):

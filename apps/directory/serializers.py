@@ -1,18 +1,25 @@
-from rest_framework import serializers
+﻿from rest_framework import serializers
 from .models import Category, Amenity, Listing, ListingImage
 
 
 class CategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
+    cover_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'icon', 'description', 'listing_type', 'subcategories']
+        fields = ['id', 'name', 'slug', 'icon', 'description', 'listing_type', 'cover_image', 'subcategories']
 
     def get_subcategories(self, obj):
         if obj.subcategories.exists():
-            return CategorySerializer(obj.subcategories.all(), many=True).data
+            return CategorySerializer(obj.subcategories.all(), many=True, context=self.context).data
         return []
+
+    def get_cover_image(self, obj):
+        if not obj.cover_image:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.cover_image.url) if request else obj.cover_image.url
 
 
 class AmenitySerializer(serializers.ModelSerializer):
@@ -22,27 +29,47 @@ class AmenitySerializer(serializers.ModelSerializer):
 
 
 class ListingImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = ListingImage
         fields = ['id', 'image', 'caption', 'order']
 
+    def get_image(self, obj):
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+
 
 class ListingCardSerializer(serializers.ModelSerializer):
     """Compact serializer for list/card views."""
+    avg_rating = serializers.FloatField(read_only=True)  # number, not "4.50" string
     category_name = serializers.CharField(source='category.name', read_only=True)
     category_slug = serializers.CharField(source='category.slug', read_only=True)
     company_name = serializers.CharField(source='company.company_name', read_only=True)
     company_verified = serializers.BooleanField(source='company.is_verified', read_only=True)
+    company_verification_level = serializers.IntegerField(source='company.verification_level', read_only=True)
+    company_verification_label = serializers.CharField(source='company.verification_label', read_only=True)
     cover_image = serializers.SerializerMethodField()
+    gallery_images = serializers.SerializerMethodField()
+    badges = serializers.SerializerMethodField()
+    business_type_display = serializers.CharField(source='get_business_type_display', read_only=True)
 
     class Meta:
         model = Listing
         fields = [
             'id', 'slug', 'title', 'short_description', 'city', 'country',
             'avg_rating', 'review_count', 'price_range', 'featured',
+            'business_type', 'business_type_display', 'listing_status', 'view_count',
             'category_name', 'category_slug', 'company_name', 'company_verified',
-            'cover_image',
+            'company_verification_level', 'company_verification_label',
+            'cover_image', 'gallery_images', 'badges',
         ]
+
+    def get_badges(self, obj):
+        if not obj.company:
+            return []
+        from apps.profiles.serializers import IdentityBadgeSerializer
+        return IdentityBadgeSerializer(obj.company.badges.all(), many=True).data
 
     def get_cover_image(self, obj):
         first = obj.gallery_images.first()
@@ -51,15 +78,56 @@ class ListingCardSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(first.image.url) if request else first.image.url
         return None
 
+    def get_gallery_images(self, obj):
+        request = self.context.get('request')
+        return [
+            request.build_absolute_uri(img.image.url) if request else img.image.url
+            for img in obj.gallery_images.all()
+        ]
+
 
 class ListingDetailSerializer(serializers.ModelSerializer):
+    avg_rating = serializers.FloatField(read_only=True)  # number, not "4.50" string
     category = CategorySerializer(read_only=True)
     amenities = AmenitySerializer(many=True, read_only=True)
     gallery_images = ListingImageSerializer(many=True, read_only=True)
     company_name = serializers.CharField(source='company.company_name', read_only=True)
     company_slug = serializers.CharField(source='company.slug', read_only=True)
     company_verified = serializers.BooleanField(source='company.is_verified', read_only=True)
-    company_logo = serializers.ImageField(source='company.logo', read_only=True)
+    company_verification_level = serializers.IntegerField(source='company.verification_level', read_only=True)
+    company_verification_label = serializers.CharField(source='company.verification_label', read_only=True)
+    company_founder_story = serializers.CharField(source='company.founder_story', read_only=True, default='')
+    company_services = serializers.SerializerMethodField()
+    company_socials = serializers.SerializerMethodField()
+    company_logo = serializers.SerializerMethodField()
+    badges = serializers.SerializerMethodField()
+    business_type_display = serializers.CharField(source='get_business_type_display', read_only=True)
+    is_saved = serializers.SerializerMethodField()
+
+    def get_is_saved(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        if not user or not user.is_authenticated:
+            return False
+        return obj.saved_by.filter(user=user).exists()
+
+    def get_company_logo(self, obj):
+        if obj.company and obj.company.logo:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.company.logo.url) if request else obj.company.logo.url
+        return None
+
+    def get_company_services(self, obj):
+        return obj.company.services_list if obj.company else []
+
+    def get_company_socials(self, obj):
+        return obj.company.social_links if obj.company else {}
+
+    def get_badges(self, obj):
+        if not obj.company:
+            return []
+        from apps.profiles.serializers import IdentityBadgeSerializer
+        return IdentityBadgeSerializer(obj.company.badges.all(), many=True).data
 
     class Meta:
         model = Listing
@@ -68,9 +136,14 @@ class ListingDetailSerializer(serializers.ModelSerializer):
             'listing_status', 'featured', 'address_line', 'city', 'state',
             'country', 'postal_code', 'latitude', 'longitude',
             'phone', 'email', 'website', 'whatsapp', 'price_range',
+            'business_type', 'business_type_display',
             'opening_hours', 'avg_rating', 'review_count', 'view_count',
-            'category', 'amenities', 'gallery_images',
-            'company_name', 'company_slug', 'company_verified', 'company_logo',
+            'category', 'amenities', 'gallery_images', 'badges', 'is_saved',
+            'company_name', 'company_slug', 'company_verified',
+            'company_verification_level', 'company_verification_label',
+            'company_founder_story',
+            'company_services', 'company_socials', 'company_logo',
+            'meta_title', 'meta_description', 'og_image',
             'created_at', 'published_at',
         ]
 
@@ -83,7 +156,7 @@ class ListingCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Listing
         fields = [
-            'company', 'category', 'secondary_categories', 'title', 'short_description',
+            'company', 'category', 'secondary_categories', 'business_type', 'title', 'short_description',
             'full_description', 'address_line', 'city', 'state', 'country', 'postal_code',
             'latitude', 'longitude', 'phone', 'email', 'website', 'whatsapp',
             'price_range', 'opening_hours', 'amenity_ids',
@@ -91,4 +164,19 @@ class ListingCreateUpdateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['listing_status'] = Listing.Status.PENDING
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        self._maybe_geocode(instance)
+        return instance
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        self._maybe_geocode(instance)
+        return instance
+
+    def _maybe_geocode(self, instance):
+        """Auto-fill coordinates from the address when the client didn't supply
+        them (e.g. the owner edited the address). Explicit lat/long always wins."""
+        data = self.initial_data
+        if data.get('latitude') in (None, '') and data.get('longitude') in (None, ''):
+            from apps.core.geocoding import geocode_listing
+            geocode_listing(instance, force=True)

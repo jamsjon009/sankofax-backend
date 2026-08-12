@@ -37,6 +37,7 @@ THIRD_PARTY_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'storages',
+    'django_ckeditor_5',
 ]
 
 LOCAL_APPS = [
@@ -50,6 +51,11 @@ LOCAL_APPS = [
     'apps.marketplace',
     'apps.newsletter',
     'apps.core',
+    'apps.blog',
+    'apps.connections',
+    'apps.community',
+    'apps.promotions',
+    'apps.analytics',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -65,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'apps.core.middleware.PageViewMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -107,10 +114,17 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = env('MEDIA_ROOT', default=str(BASE_DIR / 'media'))
+
+# Allow image/document uploads up to 10 MB (avatars, logos, covers, verification docs).
+# (nginx client_max_body_size is 20M in prod, so this is the effective limit.)
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
+FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -156,6 +170,12 @@ STRIPE_PUBLIC_KEY = env('STRIPE_PUBLIC_KEY', default='')
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default='')
 
+# Geocoding (address → lat/lng for the directory map — item #20).
+# Provider: 'nominatim' (OpenStreetMap, free, no key) | 'mapbox' | 'none' (disabled).
+GEOCODER = env('GEOCODER', default='nominatim')
+NOMINATIM_URL = env('NOMINATIM_URL', default='https://nominatim.openstreetmap.org/search')
+MAPBOX_TOKEN = env('MAPBOX_TOKEN', default='')
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@sankofax.com')
 
@@ -169,6 +189,12 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
+
+# Where to send users after login/logout (default Django value is /accounts/profile/,
+# which does not exist in this project and causes a 404 after admin login).
+LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = '/admin/'
+LOGOUT_REDIRECT_URL = '/admin/login/'
 
 UNFOLD = {
     "SITE_TITLE": "SankofaX",
@@ -194,6 +220,22 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Users & Admins",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "group",
+                        "link": "/admin/accounts/regularuserproxy/",
+                    },
+                    {
+                        "title": "Admin Users",
+                        "icon": "admin_panel_settings",
+                        "link": "/admin/accounts/adminuserproxy/",
+                    },
+                ],
+            },
+            {
                 "title": "Directory",
                 "separator": True,
                 "items": [
@@ -213,26 +255,121 @@ UNFOLD = {
                         "icon": "checklist",
                         "link": "/admin/directory/amenity/",
                     },
-                ],
-            },
-            {
-                "title": "Users & Companies",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "Users",
-                        "icon": "group",
-                        "link": "/admin/accounts/user/",
-                    },
-                    {
-                        "title": "Company Profiles",
-                        "icon": "business",
-                        "link": "/admin/profiles/companyprofile/",
-                    },
                     {
                         "title": "Reviews",
                         "icon": "star",
                         "link": "/admin/reviews/review/",
+                    },
+                ],
+            },
+            {
+                "title": "Companies",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Companies",
+                        "icon": "domain",
+                        "link": "/admin/profiles/companyprofile/",
+                    },
+                    {
+                        "title": "Verification Requests",
+                        "icon": "verified",
+                        "link": "/admin/profiles/verificationrequest/",
+                    },
+                    {
+                        "title": "Identity Badges",
+                        "icon": "loyalty",
+                        "link": "/admin/profiles/identitybadge/",
+                    },
+                ],
+            },
+            {
+                "title": "Marketplace",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Products",
+                        "icon": "shopping_bag",
+                        "link": "/admin/marketplace/product/",
+                    },
+                    {
+                        "title": "Services",
+                        "icon": "room_service",
+                        "link": "/admin/marketplace/service/",
+                    },
+                    {
+                        "title": "Orders",
+                        "icon": "shopping_cart",
+                        "link": "/admin/marketplace/order/",
+                    },
+                    {
+                        "title": "Service Bookings",
+                        "icon": "event_available",
+                        "link": "/admin/marketplace/servicebooking/",
+                    },
+                ],
+            },
+            {
+                "title": "Events",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Events",
+                        "icon": "event",
+                        "link": "/admin/events/event/",
+                    },
+                    {
+                        "title": "Event Registrations",
+                        "icon": "how_to_reg",
+                        "link": "/admin/events/eventregistration/",
+                    },
+                ],
+            },
+            {
+                "title": "Community",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Forum Categories",
+                        "icon": "forum",
+                        "link": "/admin/community/forumcategory/",
+                    },
+                    {
+                        "title": "Threads",
+                        "icon": "chat",
+                        "link": "/admin/community/thread/",
+                    },
+                    {
+                        "title": "Replies",
+                        "icon": "reply",
+                        "link": "/admin/community/reply/",
+                    },
+                ],
+            },
+            {
+                "title": "Promotions",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Story Packages",
+                        "icon": "local_offer",
+                        "link": "/admin/promotions/storypackage/",
+                    },
+                    {
+                        "title": "Story Submissions",
+                        "icon": "auto_stories",
+                        "link": "/admin/promotions/storysubmission/",
+                    },
+                ],
+            },
+            {
+                "title": "Connections",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Connections",
+                        "icon": "diversity_3",
+                        "link": "/admin/connections/connection/",
                     },
                 ],
             },
@@ -253,6 +390,22 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Blog",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Blog Posts",
+                        "icon": "article",
+                        "link": "/admin/blog/blogpost/",
+                    },
+                    {
+                        "title": "Blog Categories",
+                        "icon": "label",
+                        "link": "/admin/blog/blogcategory/",
+                    },
+                ],
+            },
+            {
                 "title": "CRM",
                 "separator": True,
                 "items": [
@@ -266,29 +419,83 @@ UNFOLD = {
                         "icon": "support_agent",
                         "link": "/admin/crm/supportticket/",
                     },
-                ],
-            },
-            {
-                "title": "Marketing",
-                "separator": True,
-                "items": [
                     {
                         "title": "Newsletter",
                         "icon": "mail",
                         "link": "/admin/newsletter/subscriber/",
                     },
+                ],
+            },
+            {
+                "title": "Website Content",
+                "separator": True,
+                "items": [
                     {
-                        "title": "Events",
-                        "icon": "event",
-                        "link": "/admin/events/event/",
+                        "title": "Home Content",
+                        "icon": "home_app_logo",
+                        "link": "/admin/core/homecontent/",
                     },
                     {
-                        "title": "Marketplace",
-                        "icon": "shopping_bag",
-                        "link": "/admin/marketplace/product/",
+                        "title": "Pages",
+                        "icon": "description",
+                        "link": "/admin/core/page/",
+                    },
+                    {
+                        "title": "FAQs",
+                        "icon": "quiz",
+                        "link": "/admin/core/faq/",
+                    },
+                    {
+                        "title": "Testimonials",
+                        "icon": "rate_review",
+                        "link": "/admin/core/testimonial/",
+                        "badge": "apps.core.dashboard.pending_testimonials_badge",
+                    },
+                ],
+            },
+            {
+                "title": "Settings",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Site Settings",
+                        "icon": "settings",
+                        "link": "/admin/core/sitesetting/",
                     },
                 ],
             },
         ],
     },
 }
+
+
+# CKEditor 5 config
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': [
+            'heading', '|',
+            'bold', 'italic', 'underline', 'strikethrough', '|',
+            'link', 'blockQuote', 'code', '|',
+            'bulletedList', 'numberedList', '|',
+            'insertImage', 'mediaEmbed', '|',
+            'insertTable', 'horizontalLine', '|',
+            'undo', 'redo',
+        ],
+        'image': {
+            'toolbar': ['imageTextAlternative', 'imageTitle', '|', 'imageStyle:alignLeft', 'imageStyle:alignRight', 'imageStyle:alignCenter', 'imageStyle:side'],
+        },
+        'table': {
+            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells'],
+        },
+        'height': '400px',
+        'width': '100%',
+    },
+    'minimal': {
+        'toolbar': ['bold', 'italic', 'link', 'bulletedList', 'numberedList'],
+        'height': '200px',
+        'width': '100%',
+    },
+}
+
+CKEDITOR_5_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+CKEDITOR_5_UPLOAD_FILE_TYPES = ['jpeg', 'jpg', 'png', 'gif', 'webp']

@@ -14,6 +14,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 class PlanListView(generics.ListAPIView):
     serializer_class = PlanSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None  # plain array, plans are few
 
     def get_queryset(self):
         qs = Plan.objects.filter(is_active=True)
@@ -122,6 +123,18 @@ def stripe_webhook(request):
 
 def _handle_checkout_complete(session):
     from apps.accounts.models import User
+
+    # Marketplace orders / service bookings / story promotions share this webhook.
+    purpose = (session.get('metadata') or {}).get('purpose')
+    if purpose in ('order', 'booking'):
+        from apps.marketplace import payments
+        payments.fulfill_checkout(session)
+        return
+    if purpose == 'story':
+        from apps.promotions import payments as promo_payments
+        promo_payments.fulfill_checkout(session)
+        return
+
     user_id = session['metadata'].get('user_id')
     plan_id = session['metadata'].get('plan_id')
     company_id = session['metadata'].get('company_id') or None

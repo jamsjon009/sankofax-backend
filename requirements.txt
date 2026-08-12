@@ -18,3 +18,4 @@ gunicorn==22.0.0
 whitenoise==6.7.0
 python-slugify==8.0.4
 Faker==26.0.0
+ua-parser>=0.18.0

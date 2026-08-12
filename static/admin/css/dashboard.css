@@ -1,0 +1,18 @@
+/* SankofaX Admin Dashboard — supplemental styles not covered by Tailwind */
+
+/* KPI card decorative circles */
+.kpi-card { position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s; }
+.kpi-card:hover { transform: translateY(-4px); box-shadow: 0 14px 36px rgba(0,0,0,.22); }
+.kpi-card::before { content:''; position:absolute; right:-18px; top:-18px; width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,.15); }
+.kpi-card::after  { content:''; position:absolute; left:-12px; bottom:-18px; width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,.08); }
+.kpi-card .ki, .kpi-card .kv, .kpi-card .kl, .kpi-card .ks { position: relative; z-index: 1; }
+
+/* Progress bar animation */
+.prog-fill { height: 100%; border-radius: 999px; width: 0%; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+
+/* Row hover */
+.skx-row { transition: background .15s; }
+
+/* Donut legend item */
+.donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.donut-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; display: inline-block; }

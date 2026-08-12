@@ -1,4 +1,4 @@
-from rest_framework.views import APIView
+﻿from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework import serializers as drf_serializers
@@ -24,3 +24,19 @@ class SubscribeView(APIView):
             sub.is_active = True
             sub.save(update_fields=['is_active'])
         return Response({'subscribed': True}, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+
+class UnsubscribeView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'detail': 'Token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            sub = Subscriber.objects.get(unsubscribe_token=token)
+            sub.is_active = False
+            sub.save(update_fields=['is_active'])
+            return Response({'unsubscribed': True, 'email': sub.email})
+        except Subscriber.DoesNotExist:
+            return Response({'detail': 'Invalid unsubscribe link.'}, status=status.HTTP_400_BAD_REQUEST)

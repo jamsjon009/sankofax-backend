@@ -1,4 +1,4 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from unfold.admin import ModelAdmin
 from .models import Review
 
@@ -6,6 +6,7 @@ from .models import Review
 @admin.register(Review)
 class ReviewAdmin(ModelAdmin):
     list_display = ['listing', 'user', 'rating', 'status', 'created_at']
+    list_per_page = 10
     list_filter = ['status', 'rating']
     search_fields = ['listing__title', 'user__email', 'title']
     actions = ['approve_reviews', 'flag_reviews', 'remove_reviews']
