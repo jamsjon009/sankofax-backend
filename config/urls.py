@@ -1,7 +1,6 @@
 ﻿from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
-from django.conf.urls.static import static
 from django.shortcuts import redirect
 from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -41,4 +40,12 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Serve user-uploaded media through Django. In a typical production stack nginx
+# serves /media/, but this deployment runs gunicorn directly (no nginx service),
+# so add an explicit route that works regardless of DEBUG — otherwise uploaded
+# images (logos, covers, avatars) 404 in production.
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
