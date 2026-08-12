@@ -53,8 +53,10 @@ cd sankofax-backend
 ### 2. Virtual environment
 ```bash
 python -m venv venv
-# Windows
+# Windows (PowerShell / CMD)
 venv\Scripts\activate
+# Windows (Git Bash / MINGW64) — use forward slashes
+source venv/Scripts/activate
 # Mac / Linux
 source venv/bin/activate
 ```
@@ -90,8 +92,18 @@ python manage.py migrate
 
 ### 7. Load data
 
-Run these in order. All are **idempotent** — safe to re-run; existing rows are skipped
-or updated in place.
+**Quickest — one command loads everything** (runs a–d below in order, all idempotent):
+
+```bash
+python manage.py seed_all
+# offline (skip the network image/geocode steps):
+python manage.py seed_all --skip-images --skip-geocode
+# also replace existing placeholder images with topical ones:
+python manage.py seed_all --force-images
+```
+
+Or run the individual steps yourself. All are **idempotent** — safe to re-run; existing
+rows are skipped or updated in place.
 
 ```bash
 # a) Demo data — users, categories, companies, listings, plans, reviews, badges,
@@ -221,6 +233,7 @@ All custom commands live under each app's `management/commands/`. Run with
 ### Data & seeding
 | Command | What it does |
 |---|---|
+| `seed_all` | **One command to load all demo data** — runs `seed_demo` → `seed_real_businesses` → `seed_real_images` → `geocode_locations` in order. Options: `--force-images`, `--skip-images`, `--skip-geocode`. |
 | `seed_demo` | Full demo dataset (users, categories, companies, listings, plans, reviews, badges, blog, testimonials, pages, FAQs, events, marketplace, promotions). |
 | `seed_real_businesses` | Seeds the 15 real businesses from `Content/Company Descriptions_2025` (item #21) — a `CompanyProfile` + published `Listing` each, owned by the `partners@sankofax.com` curator account until claimed. |
 | `seed_real_images` | Fills real, topical photos (loremflickr, picsum fallback) for listings, categories, companies and blog posts. `--force` also replaces existing placeholder images. Options: `--force`, `--sleep <s>`. |
@@ -242,7 +255,8 @@ All custom commands live under each app's `management/commands/`. Run with
 | `test` | Run the test suite. |
 | `runserver` | Start the dev server. |
 
-**Recommended first-run order:** `migrate` → `seed_demo` → `seed_real_businesses` → `seed_real_images` → `geocode_locations` → `createsuperuser`.
+**Recommended first-run order:** `migrate` → `seed_all` → `createsuperuser`
+(or run the seeders individually: `seed_demo` → `seed_real_businesses` → `seed_real_images` → `geocode_locations`).
 
 ---
 
