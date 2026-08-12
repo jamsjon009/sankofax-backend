@@ -220,6 +220,22 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Users & Admins",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "group",
+                        "link": "/admin/accounts/regularuserproxy/",
+                    },
+                    {
+                        "title": "Admin Users",
+                        "icon": "admin_panel_settings",
+                        "link": "/admin/accounts/adminuserproxy/",
+                    },
+                ],
+            },
+            {
                 "title": "Directory",
                 "separator": True,
                 "items": [
@@ -247,17 +263,6 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Admins",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "Admin Users",
-                        "icon": "admin_panel_settings",
-                        "link": "/admin/accounts/adminuserproxy/",
-                    },
-                ],
-            },
-            {
                 "title": "Companies",
                 "separator": True,
                 "items": [
@@ -266,16 +271,105 @@ UNFOLD = {
                         "icon": "domain",
                         "link": "/admin/profiles/companyprofile/",
                     },
+                    {
+                        "title": "Verification Requests",
+                        "icon": "verified",
+                        "link": "/admin/profiles/verificationrequest/",
+                    },
+                    {
+                        "title": "Identity Badges",
+                        "icon": "loyalty",
+                        "link": "/admin/profiles/identitybadge/",
+                    },
                 ],
             },
             {
-                "title": "Users",
+                "title": "Marketplace",
                 "separator": True,
                 "items": [
                     {
-                        "title": "Users",
-                        "icon": "group",
-                        "link": "/admin/accounts/regularuserproxy/",
+                        "title": "Products",
+                        "icon": "shopping_bag",
+                        "link": "/admin/marketplace/product/",
+                    },
+                    {
+                        "title": "Services",
+                        "icon": "room_service",
+                        "link": "/admin/marketplace/service/",
+                    },
+                    {
+                        "title": "Orders",
+                        "icon": "shopping_cart",
+                        "link": "/admin/marketplace/order/",
+                    },
+                    {
+                        "title": "Service Bookings",
+                        "icon": "event_available",
+                        "link": "/admin/marketplace/servicebooking/",
+                    },
+                ],
+            },
+            {
+                "title": "Events",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Events",
+                        "icon": "event",
+                        "link": "/admin/events/event/",
+                    },
+                    {
+                        "title": "Event Registrations",
+                        "icon": "how_to_reg",
+                        "link": "/admin/events/eventregistration/",
+                    },
+                ],
+            },
+            {
+                "title": "Community",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Forum Categories",
+                        "icon": "forum",
+                        "link": "/admin/community/forumcategory/",
+                    },
+                    {
+                        "title": "Threads",
+                        "icon": "chat",
+                        "link": "/admin/community/thread/",
+                    },
+                    {
+                        "title": "Replies",
+                        "icon": "reply",
+                        "link": "/admin/community/reply/",
+                    },
+                ],
+            },
+            {
+                "title": "Promotions",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Story Packages",
+                        "icon": "local_offer",
+                        "link": "/admin/promotions/storypackage/",
+                    },
+                    {
+                        "title": "Story Submissions",
+                        "icon": "auto_stories",
+                        "link": "/admin/promotions/storysubmission/",
+                    },
+                ],
+            },
+            {
+                "title": "Connections",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Connections",
+                        "icon": "diversity_3",
+                        "link": "/admin/connections/connection/",
                     },
                 ],
             },
@@ -296,22 +390,6 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "CRM",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "Leads",
-                        "icon": "person_add",
-                        "link": "/admin/crm/lead/",
-                    },
-                    {
-                        "title": "Support Tickets",
-                        "icon": "support_agent",
-                        "link": "/admin/crm/supportticket/",
-                    },
-                ],
-            },
-            {
                 "title": "Blog",
                 "separator": True,
                 "items": [
@@ -328,14 +406,30 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Settings",
+                "title": "CRM",
                 "separator": True,
                 "items": [
                     {
-                        "title": "Site Settings",
-                        "icon": "settings",
-                        "link": "/admin/core/sitesetting/",
+                        "title": "Leads",
+                        "icon": "person_add",
+                        "link": "/admin/crm/lead/",
                     },
+                    {
+                        "title": "Support Tickets",
+                        "icon": "support_agent",
+                        "link": "/admin/crm/supportticket/",
+                    },
+                    {
+                        "title": "Newsletter",
+                        "icon": "mail",
+                        "link": "/admin/newsletter/subscriber/",
+                    },
+                ],
+            },
+            {
+                "title": "Website Content",
+                "separator": True,
+                "items": [
                     {
                         "title": "Home Content",
                         "icon": "home_app_logo",
@@ -351,32 +445,22 @@ UNFOLD = {
                         "icon": "quiz",
                         "link": "/admin/core/faq/",
                     },
-                ],
-            },
-            {
-                "title": "Marketing",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "Newsletter",
-                        "icon": "mail",
-                        "link": "/admin/newsletter/subscriber/",
-                    },
-                    {
-                        "title": "Events",
-                        "icon": "event",
-                        "link": "/admin/events/event/",
-                    },
-                    {
-                        "title": "Marketplace",
-                        "icon": "shopping_bag",
-                        "link": "/admin/marketplace/product/",
-                    },
                     {
                         "title": "Testimonials",
                         "icon": "rate_review",
                         "link": "/admin/core/testimonial/",
                         "badge": "apps.core.dashboard.pending_testimonials_badge",
+                    },
+                ],
+            },
+            {
+                "title": "Settings",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Site Settings",
+                        "icon": "settings",
+                        "link": "/admin/core/sitesetting/",
                     },
                 ],
             },
